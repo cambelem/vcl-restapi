@@ -15,7 +15,7 @@ class AppServiceProvider extends ServiceProvider
     {
       if ($this->app->environment() == 'local') {
         //  $this->app->register('Wn\Generators\CommandsServiceProvider');
-          //$this->app->register('Krlove\EloquentModelGenerator\Provider\GeneratorServiceProvider');
+          $this->app->register('Krlove\EloquentModelGenerator\Provider\GeneratorServiceProvider');
       }
     }
 }
