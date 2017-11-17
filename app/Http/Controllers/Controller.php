@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use League\Fractal\Manager;
+require_once __DIR__ . ('/../../.ht-inc/utils.php');
 
 class Controller extends BaseController
 {
@@ -44,6 +45,22 @@ class Controller extends BaseController
             return $errorMessages;
         }
 
-        return true;
+        return NULL;
+    }
+
+    public function initBegin()
+    {
+        initGlobals();
+//var_dump($GLOBALS['vclhost1']);
+        dbConnect();
+
+      //  setVCLLocale();
+
+    }
+
+    public function end()
+    {
+        cleanSemaphore();
+        dbDisconnect();
     }
 }

@@ -33,10 +33,10 @@ $app->group(['middleware' => ['auth:api', 'throttle:60']], function () use ($app
 });
 
 $app->group(['prefix' => 'api/reservation/'], function ($app) {
-    $app->get('/', 'ReservationController@index');
-    $app->post('/', 'ReservationController@store');
-    $app->put('/', 'ReservationController@update');
-    $app->get('/{id}/', 'ReservationController@showById');
-    $app->put('/{id}/', 'ReservationController@updateById');
-    $app->delete('/{id}/', 'ReservationController@destroyById');
+    $app->get('/', 'ReservationController@getAllReservations');
+    $app->post('/', 'ReservationController@createReservation');
+    $app->put('/', 'ReservationController@update'); //Doesn't make sense - PUTroute below
+    $app->get('/{id}/', 'ReservationController@getReservation');
+    $app->put('/{id}/', 'ReservationController@updateReservation');
+    $app->delete('/{id}/', 'ReservationController@deleteReservation');
 });

@@ -32,7 +32,7 @@ class ImageRevision extends Model
 {
     /**
      * The table associated with the model.
-     * 
+     *
      * @var string
      */
     protected $table = 'imagerevision';
@@ -49,7 +49,7 @@ class ImageRevision extends Model
 
     /**
      * Indicates if the model should be timestamped.
-     * 
+     *
      * @var bool
      */
     public $timestamps = false;
@@ -67,7 +67,7 @@ class ImageRevision extends Model
      */
     public function user()
     {
-        return $this->belongsTo('User', 'userid');
+        return $this->belongsTo('App\Models\Vcluser', 'userid');
     }
 
     /**

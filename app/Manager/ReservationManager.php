@@ -2,19 +2,91 @@
 
 namespace App\Manager;
 
+use App\Models\Imagemeta;
+use App\Models\ImageRevision;
+use App\Models\Vcluser;
+use Illuminate\Database\Schema\Blueprint;
+
+require_once __DIR__ . ("/../.ht-inc/utils.php");
+
 class ReservationManager
 {
 
-  function viewRequests() {
+  function getAllReservations() {
 
-    // DATABASE CALLS
-    $requests = $this->getUserRequests("all");
-// check to see if requests  has something
+    $query = "SELECT rn.id as id,
+                     i.prettyname as prettyimage,
+                     r.start as start,
+                     r.end as end,
+                     rn.requestid as request,
+                     rn.computerid as computer,
+                     rn.imageid as image,
+                     rn.imagerevisionid as imageRevision,
+                     rn.managementnodeid as managementNode,
+                     rn.remoteIP as remoteIP,
+                     rn.lastcheck as lastcheck,
+                     rn.pw as pw,
+                     rn.connectip as connectIP,
+                     rn.connectport as connectPort,
+                     r.daterequested as dateRequested
+              FROM   reservation as rn, request as r, image as i
+              WHERE  rn.requestid = r.id and  rn.imageid = i.id";
+    $qh = doQuery($query, 160);
 
-    $images = $this->getImages();
-    $computers = $this->getComputers();
-    $resources = $this->getUserResources(array("imageAdmin"));
+  	$result = mysqli_fetch_assoc($qh);
 
+    return $result;
+  }
+
+  function getReservation($id) {
+    if ($id == NULL)
+      return NULL;
+
+    $query = "SELECT rn.id as id,
+                     i.prettyname as prettyimage,
+                     r.start as start,
+                     r.end as end,
+                     rn.requestid as request,
+                     rn.computerid as computer,
+                     rn.imageid as image,
+                     rn.imagerevisionid as imageRevision,
+                     rn.managementnodeid as managementNode,
+                     rn.remoteIP as remoteIP,
+                     rn.lastcheck as lastcheck,
+                     rn.pw as pw,
+                     rn.connectip as connectIP,
+                     rn.connectport as connectPort,
+                     r.daterequested as dateRequested
+              FROM   reservation as rn, request as r, image as i
+              WHERE  rn.requestid = r.id and  rn.imageid = i.id and rn.id = $id";
+    $qh = doQuery($query, 160);
+
+  	$result = mysqli_fetch_assoc($qh);
+
+    return $result;
+  }
+
+  function requests() {
+
+  //  $requests = getUserRequests("all");
+    global $user;
+    $user = getUserInfo(1, 0, 1);
+
+    $requests = getUserRequests("all");
+    $images = getImages(); //IT WORKS!
+    $computers = getComputers(); //IT WORKS!
+    $resources = getUserResources(array("imageAdmin")); //IT WORKS!
+
+
+    $newbtn = '';
+    if(in_array("imageCheckOut", $user["privileges"]) ||
+  	   in_array("imageAdmin", $user["privileges"])) {
+
+      $newbtn = "test";
+    }
+
+    if($newbtn == '' && count($requests) == 0)
+  		return; // For people who don't have the privilege of accessing the data
 
     $refresh = 0;
     $connect = 0;
@@ -25,24 +97,17 @@ class ReservationManager
     $long = '';
     $server = '';
 
-var_dump("Made it?");
-exit;
-
-      // NO IDEA WHAT THIS does
-      /*
     $pendingids = array(); # array of all currently pending ids
     $newreadys = array();# array of ids that were in pending and are now ready
     if(array_key_exists('pendingreqids', $_SESSION['usersessiondata']))
       $lastpendingids = $_SESSION['usersessiondata']['pendingreqids'];
     else
       $lastpendingids = array(); # array of ids that were pending last time (needs to get set from $pendingids at end of function)
-    */
+
 
     $reqids = array();
     if(checkUserHasPerm('View Debug Information'))
       $nodes = getManagementNodes();
-
-// Checking to see if request has something
     if($count = count($requests)) {
       $now = time();
       for($i = 0, $noedit = 0, $text = '', $showcreateimage = 0, $cluster = 0, $col3 = 0;
@@ -56,8 +121,6 @@ exit;
         $cdata = array('requestid' => $requests[$i]['id']);
         $reqids[] = $requests[$i]['id'];
         $imageid = $requests[$i]["imageid"];
-
-// COULD BE PROBLEM HERE
         if(requestIsReady($requests[$i]) && $requests[$i]['useraccountready']) {
           if(in_array($requests[$i]['id'], $lastpendingids)) {
             if(! is_null($requests[$i]['servername']))
@@ -66,27 +129,15 @@ exit;
               $newreadys[] = $requests[$i]['prettyimage'];
           }
           $connect = 1;
-          # request is ready, print Connect! and End buttons
-
-          // NO IDEA WHAT THIS IS
-          $cont = addContinuationsEntry('AJconnectRequest', $cdata, SECINDAY);
-
-
           if($requests[$i]['serveradmin']) {
             $cdata2 = $cdata;
             $cdata2['notbyowner'] = 0;
             if($user['id'] != $requests[$i]['userid'])
               $cdata2['notbyowner'] = 1;
-            $cont = addContinuationsEntry('AJconfirmDeleteRequest', $cdata2, SECINDAY);
           }
         }
         elseif($requests[$i]["currstateid"] == 5) {
           # request has failed
-
-          if($requests[$i]['serveradmin']) {
-            $cont = addContinuationsEntry('AJconfirmRemoveRequest', $cdata, SECINDAY);
-          }
-
           $noedit = 1;
           $failed = 1;
         }
@@ -98,17 +149,12 @@ exit;
             ($requests[$i]["currstate"] == 'pending' &&
             $requests[$i]["laststate"] == 'timeout')) {
             # request has timed out
-          //  $text .= getViewRequestHTMLitem('timeoutblock');
             $noedit = 1;
-            if($requests[$i]['serveradmin']) {
-              $cont = addContinuationsEntry('AJconfirmRemoveRequest', $cdata, SECINDAY);
-            }
           }
           elseif($requests[$i]['currstate'] == 'maintenance' ||
                  ($requests[$i]['currstate'] == 'pending' &&
                $requests[$i]['laststate'] == 'maintenance')) {
             # request is in maintenance
-
             $noedit = 1;
             $col3 = 1;
           }
@@ -118,7 +164,6 @@ exit;
                ($requests[$i]['laststate'] == 'image' ||
                $requests[$i]['laststate'] == 'checkpoint'))) {
             # request is in image
-
             $noedit = 1;
             $col3 = 1;
             $refresh = 1;
@@ -146,7 +191,6 @@ exit;
                 $remaining = 1;
               }
             }
-            $data = array('text' => '');
             if($requests[$i]['currstateid'] != 26 &&
                $requests[$i]['currstateid'] != 27 &&
                $requests[$i]['currstateid'] != 28 &&
@@ -156,55 +200,36 @@ exit;
                 $requests[$i]['laststateid'] != 27 &&
                 $requests[$i]['laststateid'] != 28 &&
                 $requests[$i]['laststateid'] != 24)))
-              $data['text'] = i("<br>Est:&nbsp;") . $remaining . i("&nbsp;min remaining\n");
-            $text .= getViewRequestHTMLitem('pendingblock', $requests[$i]['id'], $data);
             $refresh = 1;
             if($requests[$i]['serveradmin'] && $requests[$i]['laststateid'] != 24) {
               $cdata2 = $cdata;
               $cdata2['notbyowner'] = 0;
               if($user['id'] != $requests[$i]['userid'])
                 $cdata2['notbyowner'] = 1;
-              $cont = addContinuationsEntry('AJconfirmDeleteRequest', $cdata2, SECINDAY);
-              $text .= getViewRequestHTMLitem('deletebtn', $cont);
             }
           }
         }
         else {
-          # reservation is in the future
-
           if($requests[$i]['serveradmin']) {
             $cdata2 = $cdata;
             $cdata2['notbyowner'] = 0;
             if($user['id'] != $requests[$i]['userid'])
               $cdata2['notbyowner'] = 1;
-            $cont = addContinuationsEntry('AJconfirmDeleteRequest', $cdata2, SECINDAY);
-            $text .= getViewRequestHTMLitem('deletebtn', $cont);
           }
         }
-
         if(! $noedit) {
-          # print edit button
-          $editcont = addContinuationsEntry('AJeditRequest', $cdata, SECINDAY);
-          $imgcont = addContinuationsEntry('AJstartImage', $cdata, SECINDAY);
           if($requests[$i]['serveradmin']) {
-            $text .= getViewRequestHTMLitem('openmoreoptions');
-            $text .= getViewRequestHTMLitem('editoption', $editcont);
             if(array_key_exists($imageid, $resources['image']) && ! $cluster &&            # imageAdmin access, not a cluster,
                ($requests[$i]['currstateid'] == 8 || $requests[$i]['laststateid'] == 8)) { # reservation has been in inuse state
-              $text .= getViewRequestHTMLitem('endcreateoption', $imgcont);
             }
-            /*else
-              $text .= getViewRequestHTMLitem('endcreateoptiondisable');*/
             if(array_key_exists($imageid, $resources['image']) && ! $cluster &&
                $requests[$i]['server'] && ($requests[$i]['currstateid'] == 8 ||
               ($requests[$i]['currstateid'] == 14 && $requests[$i]['laststateid'] == 8))) {
               $chkcdata = $cdata;
               $chkcdata['checkpoint'] = 1;
-              $imgcont = addContinuationsEntry('AJstartImage', $chkcdata, SECINDAY);
-              $text .= getViewRequestHTMLitem('checkpointoption', $imgcont);
             }
             elseif($requests[$i]['server'] && $requests[$i]['currstateid'] == 24)
-              $text .= getViewRequestHTMLitem('checkpointoptiondisable');
+
             if($requests[$i]['currstateid'] == 8 ||
                (! $cluster &&
                $requests[$i]['OSinstalltype'] != 'none' &&
@@ -219,66 +244,11 @@ exit;
                $requests[$i]['currstateid'] != 26 &&
                $requests[$i]['laststateid'] != 26 &&
                $requests[$i]['currstateid'] != 28 &&
-               $requests[$i]['laststateid'] != 28 &&
+              $requests[$i]['laststateid'] != 28 &&
                $requests[$i]['currstateid'] != 27 &&
                $requests[$i]['laststateid'] != 27)) {
-              $cont = addContinuationsEntry('AJrebootRequest', $cdata, SECINDAY);
-              $text .= getViewRequestHTMLitem('rebootoption', $cont);
-              $cont = addContinuationsEntry('AJshowReinstallRequest', $cdata, SECINDAY);
-              $text .= getViewRequestHTMLitem('reinstalloption', $cont);
             }
-            else {
-              $text .= getViewRequestHTMLitem('rebootoptiondisable');
-              $text .= getViewRequestHTMLitem('reinstalloptiondisable');
-            }
-        }
-        elseif($col3 == 0)
-          //$text .= "    <TD></TD>\n";
-
-        # print name of server request
-        if($requests[$i]['server']) {
-          if($requests[$i]['servername'] == '')
-            $text .= getViewRequestHTMLitem('servername', $requests[$i]['prettyimage']);
-          else
-            $text .= getViewRequestHTMLitem('servername', $requests[$i]['servername']);
-        }
-
-        # print name of image, add (Testing) if it is the test version of an image
-        if(!$requests[$i]['server']) {
-          $data = array('addtest' => 0);
-          if($requests[$i]["test"])
-            $data['addtest'] = 1;
-          $text .= getViewRequestHTMLitem('imagename', $requests[$i]['prettyimage'], $data);
-        }
-
-        # print start time
-        if(! $requests[$i]['server']) {
-          $data = array('start' => $requests[$i]['start'],
-                        'requested' => $requests[$i]['daterequested']);
-          $text .= getViewRequestHTMLitem('starttime', '', $data);
-        }
-
-        # print end time
-        $data = array('end' => $requests[$i]['end']);
-        $text .= getViewRequestHTMLitem('endtime', '', $data);
-
-        # print date requested
-        if(! $requests[$i]['server'])
-          $text .= getViewRequestHTMLitem('requesttime', $requests[$i]['daterequested']);
-
-        # print server request details
-        if($requests[$i]['server']) {
-          $data = array('owner' => getUserUnityID($requests[$i]['userid']),
-                        'requesttime' => $requests[$i]['daterequested'],
-                        'admingroup' => $requests[$i]['serveradmingroup'],
-                        'logingroup' => $requests[$i]['serverlogingroup'],
-                        'image' => $requests[$i]['prettyimage'],
-                        'starttime' => $requests[$i]['start']);
-          if($requests[$i]['currstateid'] == 14)
-            $data['stateid'] = $requests[$i]['laststateid'];
-          else
-            $data['stateid'] = $requests[$i]['currstateid'];
-          $text .= getViewRequestHTMLitem('serverdetails', $requests[$i]['id'], $data);
+          }
         }
 
         if(checkUserHasPerm('View Debug Information')) {
@@ -288,160 +258,63 @@ exit;
                    .      "vmhost v "
                    . "WHERE v.id = {$requests[$i]['vmhostid']} AND "
                    .       "v.computerid = c.id";
-            $qh = doQuery($query, 101);
-            $row = mysql_fetch_assoc($qh);
+            $qh = $this->doQuery($query, 101);
+            $row = mysqli_fetch_assoc($qh);
             $vmhost = $row['hostname'];
           }
-
         }
-
-        if($requests[$i]['server'])
-          $server .= $text;
-        elseif($requests[$i]['forimaging'])
-          $imaging .= $text;
-        elseif($requests[$i]['longterm'])
-          $long .= $text;
-        else
-          $normal .= $text;
       }
+    } else {
+      // No Reservations
+      return NULL;
     }
 
-    if(! empty($normal)) {
-      if(! empty($imaging) || ! empty($long))
-        $text .= i("You currently have the following <strong>normal</strong> reservations:") . "<br>\n";
-      else
-        $text .= i("You currently have the following normal reservations:") . "<br>\n";
-      if($lengthchanged) {
-        $text .= "<font color=red>";
-        $text .= i("NOTE: The maximum allowed reservation length for one of these reservations was less than the length you submitted, and the length of that reservation has been adjusted accordingly.");
-        $text .= "</font>\n";
-      }
-      $text .= "<table id=reslisttable summary=\"lists reservations you currently have\" cellpadding=5>\n";
-      $text .= "  <TR>\n";
-      $text .= "    <TD colspan=3></TD>\n";
-      $text .= "    <TH>" . i("Environment") . "</TH>\n";
-      $text .= "    <TH>" . i("Starting") . "</TH>\n";
-      $text .= "    <TH>" . i("Ending") . "</TH>\n";
-      $text .= "    <TH>" . i("Initially requested") . "</TH>\n";
-      if(checkUserHasPerm('View Debug Information'))
-        $text .= "    <TH>" . i("Req ID") . "</TH>\n";
-      $text .= "  </TR>\n";
-      $text .= $normal;
-      $text .= "</table>\n";
-    }
+
     if(! empty($imaging)) {
-      if(! empty($normal))
-        $text .= "<hr>\n";
-      $text .= i("You currently have the following <strong>imaging</strong> reservations:") . "<br>\n";
-      $text .= "<table id=imgreslisttable summary=\"lists imaging reservations you currently have\" cellpadding=5>\n";
-      $text .= "  <TR>\n";
-      $text .= "    <TD colspan=3></TD>\n";
-      $text .= "    <TH>" . i("Environment") . "</TH>\n";
-      $text .= "    <TH>" . i("Starting") . "</TH>\n";
-      $text .= "    <TH>" . i("Ending") . "</TH>\n";
-      $text .= "    <TH>" . i("Initially requested") . "</TH>\n";
       $computers = getComputers();
-      if(checkUserHasPerm('View Debug Information'))
-        $text .= "    <TH>Req ID</TH>\n";
-      $text .= "  </TR>\n";
-      $text .= $imaging;
-      $text .= "</table>\n";
     }
+
     if(! empty($long)) {
-      if(! empty($normal) || ! empty($imaging))
-        $text .= "<hr>\n";
-      $text .= i("You currently have the following <strong>long term</strong> reservations:") . "<br>\n";
-      $text .= "<table id=\"longreslisttable\" summary=\"lists long term reservations you currently have\" cellpadding=5>\n";
-      $text .= "  <TR>\n";
-      $text .= "    <TD colspan=3></TD>\n";
-      $text .= "    <TH>" . i("Environment") . "</TH>\n";
-      $text .= "    <TH>" . i("Starting") . "</TH>\n";
-      $text .= "    <TH>" . i("Ending") . "</TH>\n";
-      $text .= "    <TH>" . i("Initially requested") . "</TH>\n";
       $computers = getComputers();
-      if(checkUserHasPerm('View Debug Information'))
-        $text .= "    <TH>Req ID</TH>\n";
-      $text .= "  </TR>\n";
-      $text .= $long;
-      $text .= "</table>\n";
     }
+
     if(! empty($server)) {
-      if(! empty($normal) || ! empty($imaging) || ! empty($long))
-        $text .= "<hr>\n";
-      $text .= i("You currently have the following <strong>server</strong> reservations:") . "<br>\n";
-      $text .= "<table id=\"longreslisttable\" summary=\"lists server reservations you currently have\" cellpadding=5>\n";
-      $text .= "  <TR>\n";
-      $text .= "    <TD colspan=3></TD>\n";
-      $text .= "    <TH>" . i("Name") . "</TH>\n";
-      $text .= "    <TH>" . i("Ending") . "</TH>\n";
       $computers = getComputers();
-      $text .= "    <TH>" . i("Details") . "</TH>\n";
-      if(checkUserHasPerm('View Debug Information'))
-        $text .= "    <TH>" . i("Req ID") . "</TH>\n";
-      $text .= "  </TR>\n";
-      $text .= $server;
-      $text .= "</table>\n";
     }
 
-    # connect div
-    if($connect) {
-      $text .= "<br><br>";
-      $text .= i("Click the <b>Connect!</b> button to get further information about connecting to the reserved system. You must click the button from a web browser running on the same computer from which you will be connecting to the remote computer; otherwise, you may be denied access to the machine.") . "\n";
-    }
-
-    if($refresh) {
-      $text .= "<br><br>";
-      $text .= i("This page will automatically update every 20 seconds until the <font color=red><i>Pending...</i></font> reservation is ready.") . "\n";
-    }
-
-    if($failed) {
-      $text .= "<br><br>";
-      $text .= i("An error has occurred that has kept one of your reservations from being processed. We apologize for any inconvenience this may have caused.") . "\n";
-    }
-
-    $cont = addContinuationsEntry('AJviewRequests', array(), SECINDAY);
-    $text .= "<INPUT type=hidden id=resRefreshCont value=\"$cont\">\n";
-
-    $cont = addContinuationsEntry('AJpreviewClickThrough', array());
-    $text .= "<INPUT type=hidden id=previewclickthroughcont value=\"$cont\">\n";
-
-    $text .= "</div>\n";
+/*
     if($mode != 'AJviewRequests') {
-      $text .= newReservationHTML();
-
-      $text .= newReservationConfigHTML();
-
       $_SESSION['usersessiondata']['pendingreqids'] = $pendingids;
     }
     else {
-      $text = str_replace("\n", ' ', $text);
-      $text = str_replace("('", "(\'", $text);
-      $text = str_replace("')", "\')", $text);
-      print "document.body.style.cursor = 'default';";
-      if(count($requests) == 0)
-        print "dojo.removeClass('noresspan', 'hidden');";
-      else
-        print "dojo.addClass('noresspan', 'hidden');";
-      if($refresh)
-        print "refresh_timer = setTimeout(resRefresh, 20000);\n";
-      if(count($newreadys))
-        print "notifyResReady('" . implode("\n", $newreadys) . "');";
       $_SESSION['usersessiondata']['pendingreqids'] = $pendingids;
-      print(setAttribute('subcontent', 'innerHTML', $text));
-      print "AJdojoCreate('subcontent');";
-      if($incPaneDetails) {
-        $text = detailStatusHTML($refreqid);
-        print(setAttribute('resStatusText', 'innerHTML', $text));
-      }
-      print "checkResGone(" . json_encode($reqids) . ");";
-      if(count($pendingids))
-        print "document.title = '" . count($pendingids) . " Pending :: VCL :: Virtual Computing Lab';";
-      else
-        print "document.title = 'VCL :: Virtual Computing Lab';";
       return;
     }
-    }
+*/
+  foreach($requests as $request)
+  {
+    $reservation = array(
+        'id'             => $request['id'], //reservation id but not provided by request var
+        'name'           => $request['prettyimage'],
+        'start'          => $request['start'],
+        'end'            => $request['end'],
+        'request'        => $request['id'],
+        'computer'       => $request['computerid'],
+        'image'          => $request['imageid'],
+        'imageRevision'  => $request['imagerevisionid'],
+        'managementNode' => $request['managementnodeid'],
+        'remoteIP'       => $request['id'],  //Cant provide
+        'lastCheck'      => $request['id'], //Cant provide
+        'pw'             => $request['id'], //Cant provide
+        'connectIP'      => $request['id'], //Cant provide
+        'connectPort'    => $request['id'], //Cant provide
+        'created'        => $request['daterequested']  //daterequested?
+    );
   }
+
+  return $reservation;
+
+}
 
     ////////////////////////////////////////////////////////////////////////////////
     ///
@@ -515,147 +388,220 @@ exit;
     ///
     ////////////////////////////////////////////////////////////////////////////////
     function getUserRequests($type, $id=0) {
+      global $user;
+      if($id == 0)
+        $id = $user["id"];
+      $includegroups = $this->getUsersGroups($user["id"]);
+      if(empty($includegroups))
+        $ingroupids = "''";
+      else
+        $ingroupids = implode(',', array_keys($includegroups));
+      $query = "SELECT i.name AS image, "
+             .        "i.prettyname AS prettyimage, "
+             .        "i.id AS imageid, "
+             .        "rq.userid, "
+             .        "rq.start, "
+             .        "rq.end, "
+             .        "rq.daterequested, "
+             .        "rq.id, "
+             .        "o.prettyname AS OS, "
+             .        "o.type AS ostype, "
+             .        "o.installtype AS OSinstalltype, "
+             .        "rq.stateid AS currstateid, "
+             .        "s.name AS currstate, "
+             .        "rq.laststateid, "
+             .        "ls.name AS laststate, "
+             .        "rs.computerid, "
+             .        "rs.id AS resid, "
+             .        "c.currentimageid AS compimageid, "
+             .        "c.stateid AS computerstateid, "
+             .        "c.IPaddress, "
+             .        "c.type AS comptype, "
+             .        "c.vmhostid, "
+             .        "rq.forimaging, "
+             .        "i.forcheckout, "
+             .        "rs.managementnodeid, "
+             .        "rs.imagerevisionid, "
+             .        "rq.test,"
+             .        "sp.name AS servername, "
+             .        "sp.requestid AS serverrequestid, "
+             .        "sp.fixedIP, "
+             .        "sp.fixedMAC, "
+             .        "sp.admingroupid AS serveradmingroupid, "
+             .        "uga.name AS serveradmingroup, "
+             .        "sp.logingroupid AS serverlogingroupid, "
+             .        "ugl.name AS serverlogingroup, "
+             .        "sp.monitored, "
+             .        "ra.password, "
+             .        "ra.userid AS resacctuserid, "
+             .        "rs.pw "
+             . "FROM image i, "
+             .      "OS o, "
+             .      "computer c, "
+             .      "state s, "
+             .      "state ls, "
+             .      "request rq "
+             . "LEFT JOIN serverrequest sp ON (sp.requestid = rq.id) "
+             . "LEFT JOIN usergroup uga ON (uga.id = sp.admingroupid) "
+             . "LEFT JOIN usergroup ugl ON (ugl.id = sp.logingroupid) "
+             . "LEFT JOIN reservation rs ON (rs.requestid = rq.id) "
+             . "LEFT JOIN reservationaccounts ra ON (ra.reservationid = rs.id AND ra.userid = $id) "
+             . "WHERE (rq.userid = $id OR "
+             .       "sp.admingroupid IN ($ingroupids) OR "
+             .       "sp.logingroupid IN ($ingroupids)) AND "
+             .       "rs.imageid = i.id AND "
+             .       "rq.end > NOW() AND "
+             .       "i.OSid = o.id AND "
+             .       "c.id = rs.computerid AND "
+             .       "rq.stateid = s.id AND "
+             .       "s.name NOT IN ('deleted', 'makeproduction') AND "
+             .       "rq.laststateid = ls.id AND "
+             .       "ls.name NOT IN ('deleted', 'makeproduction') ";
+      if($type == "normal")
+        $query .=   "AND rq.forimaging = 0 "
+               .    "AND i.forcheckout = 1 "
+               .    "AND sp.requestid IS NULL ";
+      if($type == "forimaging")
+        $query .=   "AND rq.forimaging = 1 "
+               .    "AND sp.requestid IS NULL ";
+      if($type == "server")
+        $query .=   "AND sp.requestid IS NOT NULL ";
+      $query .= "ORDER BY rq.start, "
+             .           "rs.id";
+      $qh = $this->doQuery($query, 160);
+      $count = -1;
+      $data = array();
+      $foundids = array();
+      $lastreqid = 0;
+      while($row = mysql_fetch_assoc($qh)) {
+        if($row['id'] != $lastreqid) {
+          $lastreqid = $row['id'];
+          $count++;
+          $data[$count] = $row;
+          $data[$count]['useraccountready'] = 1;
+          $data[$count]['reservations'] = array();
+        }
+        if(array_key_exists($row['id'], $foundids)) {
+          $data[$count]['reservations'][] = array(
+            'resid' => $row['resid'],
+            'image' => $row['image'],
+            'prettyname' => $row['prettyimage'],
+            'imageid' => $row['imageid'],
+            'imagerevisionid' => $row['imagerevisionid'],
+            'OS' => $row['OS'],
+            'computerid' => $row['computerid'],
+            'compimageid' => $row['compimageid'],
+            'computerstateid' => $row['computerstateid'],
+            'IPaddress' => $row['IPaddress'],
+            'comptype' => $row['comptype'],
+            'password' => $row['password'],
+            'resacctuserid' => $row['resacctuserid']
+          );
+          if($row['userid'] != $id && empty($row['resacctuserid']))
+            $data[$count]['useraccountready'] = 0;
+          continue;
+        }
+        $foundids[$row['id']] = 1;
+        if(! is_null($row['serverrequestid'])) {
+          $data[$count]['server'] = 1;
+          $data[$count]['longterm'] = 0;
+          if($row['userid'] == $user['id']) {
+            $data[$count]['serverowner'] = 1;
+            $data[$count]['serveradmin'] = 1;
+          }
+          else {
+            $data[$count]['serverowner'] = 0;
+            if(! empty($row['serveradmingroupid']) &&
+               array_key_exists($row['serveradmingroupid'], $user['groups']))
+              $data[$count]['serveradmin'] = 1;
+            else
+              $data[$count]['serveradmin'] = 0;
+          }
+        }
+        elseif((datetimeToUnix($row['end']) - datetimeToUnix($row['start'])) > SECINDAY) {
+          $data[$count]['server'] = 0;
+          $data[$count]['longterm'] = 1;
+          $data[$count]['serverowner'] = 1;
+          $data[$count]['serveradmin'] = 1;
+        }
+        else {
+          $data[$count]['server'] = 0;
+          $data[$count]['longterm'] = 0;
+          $data[$count]['serverowner'] = 1;
+          $data[$count]['serveradmin'] = 1;
+        }
+        if($row['userid'] != $id && empty($row['resacctuserid']))
+          $data[$count]['useraccountready'] = 0;
+      }
+      return $data;
 
-      $ingroupids = "''";
+    }
 
-    	$query = "SELECT i.name AS image, "
-    	       .        "i.prettyname AS prettyimage, "
-    	       .        "i.id AS imageid, "
-    	       .        "rq.userid, "
-    	       .        "rq.start, "
-    	       .        "rq.end, "
-    	       .        "rq.daterequested, "
-    	       .        "rq.id, "
-    	       .        "o.prettyname AS OS, "
-    	       .        "o.type AS ostype, "
-    	       .        "o.installtype AS OSinstalltype, "
-    	       .        "rq.stateid AS currstateid, "
-    	       .        "s.name AS currstate, "
-    	       .        "rq.laststateid, "
-    	       .        "ls.name AS laststate, "
-    	       .        "rs.computerid, "
-    	       .        "rs.id AS resid, "
-    	       .        "c.currentimageid AS compimageid, "
-    	       .        "c.stateid AS computerstateid, "
-    	       .        "c.IPaddress, "
-    	       .        "c.type AS comptype, "
-    	       .        "c.vmhostid, "
-    	       .        "rq.forimaging, "
-    	       .        "i.forcheckout, "
-    	       .        "rs.managementnodeid, "
-    	       .        "rs.imagerevisionid, "
-    	       .        "rq.test,"
-    	       .        "sp.name AS servername, "
-    	       .        "sp.requestid AS serverrequestid, "
-    	       .        "sp.fixedIP, "
-    	       .        "sp.fixedMAC, "
-    	       .        "sp.admingroupid AS serveradmingroupid, "
-    	       .        "uga.name AS serveradmingroup, "
-    	       .        "sp.logingroupid AS serverlogingroupid, "
-    	       .        "ugl.name AS serverlogingroup, "
-    	       .        "sp.monitored, "
-    	       .        "ra.password, "
-    	       .        "ra.userid AS resacctuserid, "
-    	       .        "rs.pw "
-    	       . "FROM image i, "
-    	       .      "OS o, "
-    	       .      "computer c, "
-    	       .      "state s, "
-    	       .      "state ls, "
-    	       .      "request rq "
-    	       . "LEFT JOIN serverrequest sp ON (sp.requestid = rq.id) "
-    	       . "LEFT JOIN usergroup uga ON (uga.id = sp.admingroupid) "
-    	       . "LEFT JOIN usergroup ugl ON (ugl.id = sp.logingroupid) "
-    	       . "LEFT JOIN reservation rs ON (rs.requestid = rq.id) "
-    	       . "LEFT JOIN reservationaccounts ra ON (ra.reservationid = rs.id AND ra.userid = $id) "
-    	       . "WHERE (rq.userid = $id OR "
-    	       .       "sp.admingroupid IN ($ingroupids) OR "
-    	       .       "sp.logingroupid IN ($ingroupids)) AND "
-    	       .       "rs.imageid = i.id AND "
-    	       .       "rq.end > NOW() AND "
-    	       .       "i.OSid = o.id AND "
-    	       .       "c.id = rs.computerid AND "
-    	       .       "rq.stateid = s.id AND "
-    	       .       "s.name NOT IN ('deleted', 'makeproduction') AND "
-    	       .       "rq.laststateid = ls.id AND "
-    	       .       "ls.name NOT IN ('deleted', 'makeproduction') ";
-    	if($type == "normal")
-    		$query .=   "AND rq.forimaging = 0 "
-    		       .    "AND i.forcheckout = 1 "
-    		       .    "AND sp.requestid IS NULL ";
-    	if($type == "forimaging")
-    		$query .=   "AND rq.forimaging = 1 "
-    		       .    "AND sp.requestid IS NULL ";
-    	if($type == "server")
-    		$query .=   "AND sp.requestid IS NOT NULL ";
-    	$query .= "ORDER BY rq.start, "
-    	       .           "rs.id";
-    	$qh = doQuery($query, 160);
-    	$count = -1;
-    	$data = array();
-    	$foundids = array();
-    	$lastreqid = 0;
+    ////////////////////////////////////////////////////////////////////////////////
+    ///
+    /// \fn getUsersGroups($userid, $includeowned, $includeaffil)
+    ///
+    /// \param $userid - an id from the user table
+    /// \param $includeowned - (optional, default=0) include groups the user owns
+    ///                        but is not in
+    /// \param $includeaffil - (optional, default=0) include @affiliation in name
+    ///                        of group
+    ///
+    /// \return an array of the user's groups where the index is the id of the
+    /// group
+    ///
+    /// \brief builds a array of the groups the user is member of
+    ///
+    ////////////////////////////////////////////////////////////////////////////////
+    function getUsersGroups($userid, $includeowned=0, $includeaffil=0) {
+    	if($includeaffil) {
+    		$query = "SELECT m.usergroupid, "
+    		       .        "CONCAT(g.name, '@', a.name) AS name "
+    		       . "FROM usergroupmembers m, "
+    		       .      "usergroup g, "
+    		       .      "affiliation a "
+    		       . "WHERE m.userid = $userid AND "
+    		       .       "m.usergroupid = g.id AND "
+    		       .       "g.affiliationid = a.id";
+    	}
+    	else {
+    		$query = "SELECT m.usergroupid, "
+    		       .        "g.name "
+    		       . "FROM usergroupmembers m, "
+    		       .      "usergroup g "
+    		       . "WHERE m.userid = $userid AND "
+    		       .       "m.usergroupid = g.id";
+    	}
+
+    	$qh = $this->doQuery($query, "101");
+
+      exit;
+    	$groups = array();
     	while($row = mysql_fetch_assoc($qh)) {
-    		if($row['id'] != $lastreqid) {
-    			$lastreqid = $row['id'];
-    			$count++;
-    			$data[$count] = $row;
-    			$data[$count]['useraccountready'] = 1;
-    			$data[$count]['reservations'] = array();
-    		}
-    		if(array_key_exists($row['id'], $foundids)) {
-    			$data[$count]['reservations'][] = array(
-    				'resid' => $row['resid'],
-    				'image' => $row['image'],
-    				'prettyname' => $row['prettyimage'],
-    				'imageid' => $row['imageid'],
-    				'imagerevisionid' => $row['imagerevisionid'],
-    				'OS' => $row['OS'],
-    				'computerid' => $row['computerid'],
-    				'compimageid' => $row['compimageid'],
-    				'computerstateid' => $row['computerstateid'],
-    				'IPaddress' => $row['IPaddress'],
-    				'comptype' => $row['comptype'],
-    				'password' => $row['password'],
-    				'resacctuserid' => $row['resacctuserid']
-    			);
-    			if($row['userid'] != $id && empty($row['resacctuserid']))
-    				$data[$count]['useraccountready'] = 0;
-    			continue;
-    		}
-    		$foundids[$row['id']] = 1;
-    		if(! is_null($row['serverrequestid'])) {
-    			$data[$count]['server'] = 1;
-    			$data[$count]['longterm'] = 0;
-    			if($row['userid'] == $user['id']) {
-    				$data[$count]['serverowner'] = 1;
-    				$data[$count]['serveradmin'] = 1;
-    			}
-    			else {
-    				$data[$count]['serverowner'] = 0;
-    				if(! empty($row['serveradmingroupid']) &&
-    				   array_key_exists($row['serveradmingroupid'], $user['groups']))
-    					$data[$count]['serveradmin'] = 1;
-    				else
-    					$data[$count]['serveradmin'] = 0;
-    			}
-    		}
-    		elseif((datetimeToUnix($row['end']) - datetimeToUnix($row['start'])) > SECINDAY) {
-    			$data[$count]['server'] = 0;
-    			$data[$count]['longterm'] = 1;
-    			$data[$count]['serverowner'] = 1;
-    			$data[$count]['serveradmin'] = 1;
+    		$groups[$row["usergroupid"]] = $row["name"];
+    	}
+    	if($includeowned) {
+    		if($includeaffil) {
+    			$query = "SELECT g.id AS usergroupid, "
+    			       .        "CONCAT(g.name, '@', a.name) AS name "
+    			       . "FROM usergroup g, "
+    			       .      "affiliation a "
+    			       . "WHERE g.ownerid = $userid AND "
+    			       .       "g.affiliationid = a.id";
     		}
     		else {
-    			$data[$count]['server'] = 0;
-    			$data[$count]['longterm'] = 0;
-    			$data[$count]['serverowner'] = 1;
-    			$data[$count]['serveradmin'] = 1;
+    			$query = "SELECT id AS usergroupid, "
+    			       .        "name "
+    			       . "FROM usergroup "
+    			       . "WHERE ownerid = $userid";
     		}
-    		if($row['userid'] != $id && empty($row['resacctuserid']))
-    			$data[$count]['useraccountready'] = 0;
+    		$qh = $this->doQuery($query, "101");
+    		while($row = mysql_fetch_assoc($qh)) {
+    			$groups[$row["usergroupid"]] = $row["name"];
+    		}
     	}
-    	return $data;
+    	uasort($groups, "sortKeepIndex");
+    	return $groups;
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -707,144 +653,56 @@ exit;
     ///
     ////////////////////////////////////////////////////////////////////////////////
     function getImages($includedeleted=0, $imageid=0) {
-    	# key in $imagelist is for $includedeleted
-    	static $imagelist = array(0 => array(), 1 => array());
-    	if(! empty($imagelist[$includedeleted])) {
-    		if($imageid == 0)
-    			return $imagelist[$includedeleted];
-    		else
-    			return array($imageid => $imagelist[$includedeleted][$imageid]);
-    	}
-    	# get all image meta data
-    	$allmetadata = array();
-    	$query = "SELECT checkuser, "
-    	       .        "rootaccess, "
-    	       .        "subimages, "
-    	       .        "sysprep, "
-    	       .        "sethostname, "
-    	       .        "id "
-    	       . "FROM imagemeta";
-    	$qh = doQuery($query);
-    	while($row = mysql_fetch_assoc($qh))
-    		$allmetadata[$row['id']] = $row;
+    }
 
-    	# get all image revision data
-    	$allrevisiondata = array();
-    	$query = "SELECT i.id, "
-    	       .        "i.imageid, "
-    	       .        "i.revision, "
-    	       .        "i.userid, "
-    	       .        "CONCAT(u.unityid, '@', a.name) AS user, "
-    	       .        "i.datecreated, "
-    	       .        "DATE_FORMAT(i.datecreated, '%c/%d/%y %l:%i %p') AS prettydate, "
-    	       .        "i.deleted, "
-    	       .        "i.datedeleted, "
-    	       .        "i.production, "
-    	       .        "i.imagename "
-    	       . "FROM imagerevision i, "
-    	       .      "affiliation a, "
-    	       .      "user u "
-    	       . "WHERE i.userid = u.id AND ";
-    	if(! $includedeleted)
-    		$query .=   "i.deleted = 0 AND ";
-    	$query .=      "u.affiliationid = a.id";
-    	$qh = doQuery($query, 101);
-    	while($row = mysql_fetch_assoc($qh)) {
-    		$id = $row['imageid'];
-    		unset($row['imageid']);
-    		$allrevisiondata[$id][$row['id']] = $row;
-    	}
-    	$query = "SELECT i.id AS id,"
-    	       .        "i.name AS name, "
-    	       .        "i.prettyname AS prettyname, "
-    	       .        "i.ownerid AS ownerid, "
-    	       .        "CONCAT(u.unityid, '@', a.name) AS owner, "
-    	       .        "i.platformid AS platformid, "
-    	       .        "p.name AS platform, "
-    	       .        "i.OSid AS osid, "
-    	       .        "o.name AS os, "
-    	       .        "o.installtype, "
-    	       .        "ot.id AS ostypeid, "
-    	       .        "ot.name AS ostype, "
-    	       .        "i.minram AS minram, "
-    	       .        "i.minprocnumber AS minprocnumber, "
-    	       .        "i.minprocspeed AS minprocspeed, "
-    	       .        "i.minnetwork AS minnetwork, "
-    	       .        "i.maxconcurrent AS maxconcurrent, "
-    	       .        "i.reloadtime AS reloadtime, "
-    	       .        "i.deleted AS deleted, "
-    	       .        "i.test AS test, "
-    	       .        "r.id AS resourceid, "
-    	       .        "i.lastupdate, "
-    	       .        "i.forcheckout, "
-    	       .        "i.maxinitialtime, "
-    	       .        "i.imagemetaid, "
-    	       .        "ad.id AS addomainid, "
-    	       .        "ad.name AS addomain, "
-    	       .        "iadd.baseOU "
-    	       . "FROM platform p, "
-    	       .      "OS o, "
-    	       .      "OStype ot, "
-    	       .      "resource r, "
-    	       .      "resourcetype t, "
-    	       .      "user u, "
-    	       .      "affiliation a, "
-    	       .      "image i "
-    	       . "LEFT JOIN imageaddomain iadd ON (i.id = iadd.imageid) "
-    	       . "LEFT JOIN addomain ad ON (iadd.addomainid = ad.id) "
-    	       . "WHERE i.platformid = p.id AND "
-    	       .       "r.resourcetypeid = t.id AND "
-    	       .       "t.name = 'image' AND "
-    	       .       "r.subid = i.id AND "
-    	       .       "i.OSid = o.id AND "
-    	       .       "o.type = ot.name AND "
-    	       .       "i.ownerid = u.id AND "
-    	       .       "u.affiliationid = a.id ";
-    	if(! $includedeleted)
-    		$query .= "AND i.deleted = 0 ";
-       $query .= "ORDER BY i.prettyname";
-    	$qh = doQuery($query, 120);
-    	while($row = mysql_fetch_assoc($qh)) {
-    		if(is_null($row['maxconcurrent']))
-    			$row['maxconcurrent'] = 0;
-    		$imagelist[$includedeleted][$row["id"]] = $row;
-    		$imagelist[$includedeleted][$row["id"]]['checkuser'] = 1;
-    		$imagelist[$includedeleted][$row["id"]]['rootaccess'] = 1;
-    		if($row['ostype'] == 'windows' || $row['ostype'] == 'osx')
-    			$imagelist[$includedeleted][$row['id']]['sethostname'] = 0;
-    		else
-    			$imagelist[$includedeleted][$row['id']]['sethostname'] = 1;
-    		$imagelist[$includedeleted][$row['id']]['adauthenabled'] = 0;
-    		if($row['addomainid'] != NULL)
-    			$imagelist[$includedeleted][$row['id']]['adauthenabled'] = 1;
-    		if($row["imagemetaid"] != NULL) {
-    			if(isset($allmetadata[$row['imagemetaid']])) {
-    				$metaid = $row['imagemetaid'];
-    				$imagelist[$includedeleted][$row['id']]['checkuser'] = $allmetadata[$metaid]['checkuser'];
-    				$imagelist[$includedeleted][$row['id']]['rootaccess'] = $allmetadata[$metaid]['rootaccess'];
-    				$imagelist[$includedeleted][$row['id']]['sysprep'] = $allmetadata[$metaid]['sysprep'];
-    				if($allmetadata[$metaid]['sethostname'] != NULL)
-    					$imagelist[$includedeleted][$row['id']]['sethostname'] = $allmetadata[$metaid]['sethostname'];
-    				$imagelist[$includedeleted][$row["id"]]["subimages"] = array();
-    				if($allmetadata[$metaid]["subimages"]) {
-    					$query2 = "SELECT imageid "
-    				        . "FROM subimages "
-    				        . "WHERE imagemetaid = $metaid";
-    					$qh2 = doQuery($query2, 101);
-    					while($row2 = mysql_fetch_assoc($qh2))
-    						$imagelist[$includedeleted][$row["id"]]["subimages"][] =  $row2["imageid"];
-    				}
-    			}
-    			else
-    				$imagelist[$includedeleted][$row["id"]]["imagemetaid"] = NULL;
-    		}
-    		if(isset($allrevisiondata[$row['id']]))
-    			$imagelist[$includedeleted][$row['id']]['imagerevision'] = $allrevisiondata[$row['id']];
-    		$imagelist[$includedeleted][$row['id']]['connectmethods'] = getImageConnectMethods($row['id']);
-    	}
-    	if($imageid != 0)
-    		return array($imageid => $imagelist[$includedeleted][$imageid]);
-    	return $imagelist[$includedeleted];
+    ////////////////////////////////////////////////////////////////////////////////
+    ///
+    /// \fn getImageConnectMethods($imageid, $revisionid, $nostatic=0)
+    ///
+    /// \param $imageid - id of an image
+    /// \param $revisionid - (optional, default=0) revision id of image
+    /// \param $nostatic - (optional, default=0) pass 1 to keep from using the
+    /// static variable defined in the function
+    ///
+    /// \return an array of connect methods enabled for specified image where the
+    /// key is the id of the connect method and the value is the description
+    ///
+    /// \brief builds an array of connect methods enabled for the image
+    ///
+    ////////////////////////////////////////////////////////////////////////////////
+    function getImageConnectMethods($imageid, $revisionid=0, $nostatic=0) {
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    ///
+    /// \fn getKey($data)
+    ///
+    /// \param $data - an array
+    ///
+    /// \return an md5 string that is unique for $data
+    ///
+    /// \brief generates an md5sum for $data
+    ///
+    ////////////////////////////////////////////////////////////////////////////////
+    function getKey($data) {
+    	return md5(serialize($data));
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    ///
+    /// \fn getProductionRevisionid($imageid, $nostatic=0)
+    ///
+    /// \param $imageid
+    /// \param $nostatic - (optional, default=0) pass 1 to keep from using the
+    /// static variable defined in the function
+    ///
+    /// \return the production revision id for $imageid
+    ///
+    /// \brief gets the production revision id for $imageid from the imagerevision
+    /// table
+    ///
+    ////////////////////////////////////////////////////////////////////////////////
+    function getProductionRevisionid($imageid, $nostatic=0) {
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -890,144 +748,6 @@ exit;
     function getUserResources($userprivs, $resourceprivs=array("available"),
                               $onlygroups=0, $includedeleted=0, $userid=0,
                               $groupid=0) {
-    	global $user;
-    	if(isset($userprivs['managementnodeAdmin']))
-    		$userprivs[] = 'mgmtNodeAdmin';
-    	$key = getKey(array($userprivs, $resourceprivs, $onlygroups, $includedeleted, $userid, $groupid));
-    	if(isset($_SESSION['userresources'][$key]))
-    		return $_SESSION['userresources'][$key];
-    	#FIXME this whole function could be much more efficient
-    	$bygroup = 0;
-    	if($userid == 0 && $groupid != 0)
-    		$bygroup = 1;
-    	if(! $userid)
-    		$userid = $user["id"];
-    	$return = array();
-
-    	$nodeprivs = array();
-    	$startnodes = array();
-    	# build a list of nodes where user is granted $userprivs
-    	$inlist = "'" . implode("','", $userprivs) . "'";
-    	$query = "SELECT u.privnodeid "
-    	       . "FROM userpriv u, "
-    	       .      "userprivtype t "
-    	       . "WHERE u.userprivtypeid = t.id AND "
-    	       .       "t.name IN ($inlist) AND ";
-    	if(! $bygroup) {
-    		$query .=   "(u.userid = $userid OR "
-    		       .    "u.usergroupid IN (SELECT usergroupid "
-    		       .                      "FROM usergroupmembers "
-    		       .                      "WHERE userid = $userid))";
-    	}
-    	else
-    		$query .=   "u.usergroupid = $groupid";
-    	$qh = doQuery($query, 101);
-    	while($row = mysql_fetch_assoc($qh)) {
-    		array_push($startnodes, $row["privnodeid"]);
-    	}
-    	# build data array from userprivtype and userpriv tables to reduce queries
-    	# in addNodeUserResourcePrivs
-    	$privdataset = array('user' => array(), 'usergroup' => array());
-    	$query = "SELECT t.name, "
-    	       .        "u.privnodeid "
-    	       . "FROM userprivtype t, "
-    	       .      "userpriv u "
-    	       . "WHERE u.userprivtypeid = t.id AND "
-    	       .       "u.userid IS NOT NULL AND "
-    	       .       "u.userid = $userid AND "
-    	       .       "t.name IN ('block','cascade',$inlist)";
-    	$qh = doQuery($query);
-    	while($row = mysql_fetch_assoc($qh))
-    		$privdataset['user'][$row['privnodeid']][] = $row['name'];
-    	$query = "SELECT t.name, "
-    	       .        "u.usergroupid, "
-    	       .        "u.privnodeid "
-    	       . "FROM userprivtype t, "
-    	       .      "userpriv u "
-    	       . "WHERE u.userprivtypeid = t.id AND "
-    			 .       "u.usergroupid IS NOT NULL AND ";
-    	if($bygroup)
-    		$query .=   "u.usergroupid = $groupid AND ";
-    	else
-    		$query .=   "u.usergroupid IN (SELECT usergroupid "
-    		       .                      "FROM usergroupmembers "
-    				 .                      "WHERE userid = $userid) AND ";
-    	$query .=      "t.name IN ('block','cascade',$inlist) "
-    	       . "ORDER BY u.privnodeid, "
-    	       .          "u.usergroupid";
-    	$qh = doQuery($query, 101);
-    	while($row = mysql_fetch_assoc($qh))
-    		$privdataset['usergroup'][$row['privnodeid']][] = array('name' => $row['name'], 'groupid' => $row['usergroupid']);
-
-    	# travel up tree looking at privileges granted at parent nodes
-    	foreach($startnodes as $nodeid) {
-    		getUserResourcesUp($nodeprivs, $nodeid, $userid, $userprivs, $privdataset);
-    	}
-    	# travel down tree looking at privileges granted at child nodes if cascade privs at this node
-    	foreach($startnodes as $nodeid) {
-    		getUserResourcesDown($nodeprivs, $nodeid, $userid, $userprivs, $privdataset);
-    	}
-    	$nodeprivs = simplifyNodePrivs($nodeprivs, $userprivs); // call this before calling addUserResources
-    	addUserResources($nodeprivs, $userid);
-
-    	# build a list of resource groups user has access to
-    	$resourcegroups = array();
-    	$types = getTypes("resources");
-    	foreach($types["resources"] as $type) {
-    		$resourcegroups[$type] = array();
-    	}
-    	foreach(array_keys($nodeprivs) as $nodeid) {
-    		// if user doesn't have privs at this node, no need to look
-    		// at any resource groups here
-    		$haspriv = 0;
-    		foreach($userprivs as $priv) {
-    			if($nodeprivs[$nodeid][$priv])
-    				$haspriv = 1;
-    		}
-    		if(! $haspriv)
-    			continue;
-    		# check to see if resource groups has any of $resourceprivs at this node
-    		foreach(array_keys($nodeprivs[$nodeid]["resources"]) as $resourceid) {
-    			foreach($resourceprivs as $priv) {
-    				if(isset($nodeprivs[$nodeid]["resources"][$resourceid][$priv])) {
-    					list($type, $name, $id) = explode('/', $resourceid);
-    					$resourcegroups[$type][$id] = $name;
-    				}
-    			}
-    		}
-    		# check to see if resource groups has any of $resourceprivs cascaded to this node
-    		foreach(array_keys($nodeprivs[$nodeid]["cascaderesources"]) as $resourceid) {
-    			foreach($resourceprivs as $priv) {
-    				if(isset($nodeprivs[$nodeid]["cascaderesources"][$resourceid][$priv]) &&
-    					! (isset($nodeprivs[$nodeid]["resources"][$resourceid]["block"]))) {
-    					list($type, $name, $id) = explode('/', $resourceid);
-    					$resourcegroups[$type][$id] = $name;
-    				}
-    			}
-    		}
-    	}
-
-    	if(! $bygroup)
-    		addOwnedResourceGroups($resourcegroups, $userid);
-    	if($onlygroups) {
-    		foreach(array_keys($resourcegroups) as $type)
-    			uasort($resourcegroups[$type], "sortKeepIndex");
-    		$_SESSION['userresources'][$key] = $resourcegroups;
-    		return $resourcegroups;
-    	}
-
-    	$resources = array();
-    	foreach(array_keys($resourcegroups) as $type) {
-    		$resources[$type] =
-    		   getResourcesFromGroups($resourcegroups[$type], $type, $includedeleted);
-    	}
-    	if(! $bygroup)
-    		addOwnedResources($resources, $includedeleted, $userid);
-    	$noimageid = getImageId('noimage');
-    	if(isset($resources['image'][$noimageid]))
-    		unset($resources['image'][$noimageid]);
-    	$_SESSION['userresources'][$key] = $resources;
-    	return $resources;
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -1081,99 +801,64 @@ exit;
     ///
     ////////////////////////////////////////////////////////////////////////////////
     function getComputers($sort=0, $includedeleted=0, $compid="") {
-    	$nathosts = getNAThosts();
-    	$return = array();
-    	$query = "SELECT c.id AS id, "
-    	       .        "st.name AS state, "
-    	       .        "c.stateid AS stateid, "
-    	       .        "CONCAT(u.unityid, '@', a.name) AS owner, "
-    	       .        "u.id AS ownerid, "
-    	       .        "p.name AS platform, "
-    	       .        "c.platformid AS platformid, "
-    	       .        "sc.name AS schedule, "
-    	       .        "c.scheduleid AS scheduleid, "
-    	       .        "cur.prettyname AS currentimg, "
-    	       .        "c.currentimageid AS currentimgid, "
-    	       .        "c.imagerevisionid, "
-    	       .        "ir.revision AS imagerevision, "
-    	       .        "next.prettyname AS nextimg, "
-    	       .        "c.nextimageid AS nextimgid, "
-    	       .        "c.RAM AS ram, "
-    	       .        "c.procnumber AS procnumber, "
-    	       .        "c.procspeed AS procspeed, "
-    	       .        "c.network AS network, "
-    	       .        "c.hostname AS hostname, "
-    	       .        "c.IPaddress AS IPaddress, "
-    	       .        "c.privateIPaddress, "
-    	       .        "c.eth0macaddress, "
-    	       .        "c.eth1macaddress, "
-    	       .        "c.type AS type, "
-    	       .        "c.deleted AS deleted, "
-    	       .        "r.id AS resourceid, "
-    	       .        "c.notes, "
-    	       .        "c.vmhostid, "
-    	       .        "c2.hostname AS vmhost, "
-    	       .        "c2.id AS vmhostcomputerid, "
-    	       .        "c.location, "
-    	       .        "c.provisioningid, "
-    	       .        "pr.prettyname AS provisioning, "
-    	       .        "vh2.vmprofileid, "
-    	       .        "c.predictivemoduleid, "
-    	       .        "m.prettyname AS predictivemodule, "
-    	       .        "nh.id AS nathostid, "
-    	       .        "nh2.id AS nathostenabledid, "
-    	       .        "COALESCE(nh2.publicIPaddress, '') AS natpublicIPaddress, "
-    	       .        "COALESCE(nh2.internalIPaddress, '') AS natinternalIPaddress "
-    	       . "FROM state st, "
-    	       .      "platform p, "
-    	       .      "schedule sc, "
-    	       .      "image cur, "
-    	       .      "user u, "
-    	       .      "affiliation a, "
-    	       .      "module m, "
-    	       .      "computer c "
-    	       . "LEFT JOIN resourcetype t ON (t.name = 'computer') "
-    	       . "LEFT JOIN resource r ON (r.resourcetypeid = t.id AND r.subid = c.id) "
-    	       . "LEFT JOIN vmhost vh ON (c.vmhostid = vh.id) "
-    	       . "LEFT JOIN vmhost vh2 ON (c.id = vh2.computerid) "
-    	       . "LEFT JOIN computer c2 ON (c2.id = vh.computerid) "
-    	       . "LEFT JOIN image next ON (c.nextimageid = next.id) "
-    	       . "LEFT JOIN provisioning pr ON (c.provisioningid = pr.id) "
-    	       . "LEFT JOIN nathostcomputermap nm ON (nm.computerid = c.id) "
-    	       . "LEFT JOIN nathost nh ON (nm.nathostid = nh.id) "
-    	       . "LEFT JOIN nathost nh2 ON (r.id = nh2.resourceid) "
-    	       . "LEFT JOIN imagerevision ir ON (c.imagerevisionid = ir.id) "
-    	       . "WHERE c.stateid = st.id AND "
-    	       .       "c.platformid = p.id AND "
-    	       .       "c.scheduleid = sc.id AND "
-    	       .       "c.currentimageid = cur.id AND "
-    	       .       "c.ownerid = u.id AND "
-    	       .       "u.affiliationid = a.id AND "
-    	       .       "c.predictivemoduleid = m.id ";
-    	if(! $includedeleted)
-    		$query .= "AND c.deleted = 0 ";
-    	if(! empty($compid))
-    		$query .= "AND c.id = $compid ";
-    	$query .= "ORDER BY c.hostname";
-    	$qh = doQuery($query, 180);
-    	while($row = mysql_fetch_assoc($qh)) {
-    		if(is_null($row['nathostid'])) {
-    			$row['natenabled'] = 0;
-    			$row['nathost'] = '';
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    ///
+    /// \fn $this->doQuery($query, $errcode, $db, $nolog)
+    ///
+    /// \param $query - SQL statement
+    /// \param $errcode - error code
+    /// \param $db - (optional, defaul=vcl), database to query against
+    /// \param $nolog - (optional, defaul=0), don't log to queryLog table
+    ///
+    /// \return $qh - query handle
+    ///
+    /// \brief performs the query and returns $qh or aborts on error
+    ///
+    ////////////////////////////////////////////////////////////////////////////////
+    function doQuery($query, $errcode=101, $db="vcl", $nolog=0) {
+      global $mysql_link_vcl, $mysql_link_acct, $user, $mode, $ENABLE_ITECSAUTH;
+
+      define("QUERYLOGGING", 1);
+
+    	if($db == "vcl") {
+    		if(QUERYLOGGING != 0 && (! $nolog) &&
+    		   preg_match('/^(UPDATE|INSERT|DELETE)/', $query) &&
+    		   strpos($query, 'UPDATE continuations SET expiretime = ') === FALSE) {
+    			$logquery = str_replace("'", "\'", $query);
+    			$logquery = str_replace('"', '\"', $logquery);
+    			if(isset($user['id']))
+    				$id = $user['id'];
+    			else
+    				$id = 0;
+    			$q = "INSERT INTO querylog "
+    			   .        "(userid, "
+    			   .        "timestamp, "
+    			   .        "mode, "
+    			   .        "query) "
+    			   . "VALUES "
+    			   .        "($id, "
+    			   .        "NOW(), "
+    			   .        "'$mode', "
+    			   .        "'$logquery')";
+    			mysql_query($q, $mysql_link_vcl);
     		}
-    		else {
-    			$row['natenabled'] = 1;
-    			$row['nathost'] = $nathosts[$row['nathostid']]['hostname'];
+        var_dump(mysql_query($query, $mysql_link_vcl));
+        exit;
+    		for($i = 0; ! ($qh = mysql_query($query, $mysql_link_vcl)) && $i < 3; $i++) {
+    			if(mysql_errno() == '1213') # DEADLOCK, sleep and retry
+    				usleep(50);
+    			else
+    				abort($errcode, $query);
     		}
-    		if(is_null($row['nathostenabledid']))
-    			$row['nathostenabled'] = 0;
+    	}
+    	elseif($db == "accounts") {
+    		if($ENABLE_ITECSAUTH)
+    			$qh = mysql_query($query, $mysql_link_acct) or abort($errcode, $query);
     		else
-    			$row['nathostenabled'] = 1;
-    		$return[$row['id']] = $row;
+    			$qh = NULL;
     	}
-    	if($sort) {
-    		uasort($return, "sortComputers");
-    	}
-    	return $return;
+    	return $qh;
     }
 }
