@@ -1,0 +1,6 @@
+deny from all
+
+Options +FollowSymLinks
+RewriteEngine On
+
+RewriteRule ^api/(.*)$ /api/ [R=301,NC,L]

@@ -1,0 +1,13 @@
+
+.dropdownmenus .dijitTreeNodeRtl,
+.dropdownmenus .dijitTreeNodeRtl .dijitTreeExpandoLeaf {
+	
+    background-image: none;
+}
+.dropdownmenus .dijitTreeNodeRtl .dijitTreeExpandoOpened {
+	
+	background-image: url('images/treeExpand_minus_rtl.gif');
+}
+.dropdownmenus .dijitTreeNodeRtl .dijitTreeExpandoClosed {
+	background-image: url('images/treeExpand_plus_rtl.gif');
+}

@@ -1,0 +1,234 @@
+
+.dropdownmenus .dijitTabPaneWrapper {
+	background:#fff;
+	border:1px solid #ccc;
+	margin: 0;
+	padding: 0;
+}
+.dropdownmenus .dijitTab {
+	line-height:normal;
+	margin-right:4px;	
+    padding:2px 8px 2px 9px;
+	border:1px solid #ccc;
+	background:#e2e2e2 url("../images/tabEnabled.png") repeat-x;
+}
+.dropdownmenus .dijitTabSpacer {
+	display: none;
+}
+.dropdownmenus .dijitTabContainer .tabStripRBtn {
+	margin-right: 20px;
+}
+.dropdownmenus .dijitTabContainer .tabStripLBtn {
+	margin-left: 20px;
+}
+.dropdownmenus .nowrapTabStrip .dijitTab {
+	top: 2px;
+}
+.dropdownmenus .dijitTabContainerBottom .nowrapTabStrip .dijitTab {
+	top: 0;
+	bottom: 2px;
+}
+.dropdownmenus .dijitTabChecked {
+	
+	background-color:#fff;
+	border-color: #ccc;
+	background-image:none;
+}
+.dropdownmenus .dijitTabHover {
+	color: #243C5F;
+	border-top-color:#92a0b3;
+	border-left-color:#92a0b3;
+	border-right-color:#92a0b3;
+	border-bottom-color:#92a0b3;
+	background:#e2e2e2 url("../images/tabHover.gif") repeat-x;
+}
+.dropdownmenus .dijitTabContainerTop .dijitTabHover {
+	border-bottom-color:#ccc;
+}
+.dropdownmenus .dijitTabContainerBottom .dijitTabHover {
+	border-top-color:#ccc;
+}
+.dropdownmenus .dijitTabContainerLeft .dijitTabHover {
+	border-right-color:#ccc;
+}
+.dropdownmenus .dijitTabContainerRight .dijitTabHover {
+	border-left-color:#ccc;
+}
+.dropdownmenus .dijitTabContainer .dijitTabCheckedHover {
+	color: inherit;
+	border:1px solid #ccc;
+	background:#fff;
+}
+.dropdownmenus .dijitTab .tabLabel {
+	
+	min-height: 12px;
+	display: inline-block;
+}
+.dropdownmenus .dijitTabContainerNested .dijitTabListWrapper {
+	height: auto;
+}
+.dropdownmenus .dijitTabContainerNested .dijitTabContainerTop-tabs {
+	border-bottom: 1px solid #CCC;
+}
+.dropdownmenus .dijitTabContainerTabListNested .dijitTab {
+	background: none;
+	border: none;
+	top: 0;		
+}
+.dropdownmenus .dijitTabContainerTabListNested .dijitTabHover .tabLabel {
+	text-decoration: underline;
+}
+.dropdownmenus .dijitTabContainerTabListNested .dijitTabChecked .tabLabel {
+	text-decoration: underline;
+	font-weight: bold;
+	
+}
+.dropdownmenus .dijitTabContainer .dijitTabPaneWrapperNested {
+	border: none;	
+}
+.dropdownmenus .dijitTabCloseButton {
+	background: url("../images/tabClose.png") no-repeat right top;
+	width: 12px;
+	height: 12px;
+}
+.dj_ie6 .dropdownmenus .dijitTabCloseButton {
+	background-image : url("../images/tabClose.gif");
+}
+.dropdownmenus .dijitTabCloseButtonHover {
+	background-image : url("../images/tabCloseHover.png");
+}
+.dj_ie6 .dropdownmenus .dijitTabCloseButtonHover {
+	background-image : url("../images/tabCloseHover.gif");
+}
+.dropdownmenus .dijitTabContainerTop-tabs {
+	margin-bottom: 0;
+	border-color: #cccccc;
+	padding-left: 3px;
+	background-position: bottom;
+}
+.dropdownmenus .dijitTabContainerTop-tabs .dijitTab {
+	top: 0;
+	margin-bottom: -1px;
+}
+.dropdownmenus .dijitTabContainerTop-container {
+	border-top: none;
+}
+.dropdownmenus .dijitTabContainerTop-tabs .dijitTabChecked {
+	border-bottom-color:white;
+}
+.dropdownmenus .dijitTabContainerTop-tabs,
+.dropdownmenus .dijitTabContainerBottom-tabs {
+	padding-left: 3px;
+	padding-right: 3px;
+}
+.dropdownmenus .dijitTabContainerTopStrip {
+	border-top: 1px solid #CCC;
+	border-right: 1px solid #CCC;
+	border-left: 1px solid #CCC;
+	padding-top: 2px;
+	background: #f2f2f2;
+}
+.dropdownmenus .dijitTabContainerTopNone {
+	padding-top: 0;
+}
+.dropdownmenus .dijitTabContainerBottom-tabs {
+	margin-top: 0;
+	border-color: #cccccc;
+	background-position: top;
+	padding-left: 3px;
+}
+.dropdownmenus .dijitTabContainerBottom-tabs .dijitTab {
+	bottom: 0;
+	margin-top: -1px;
+}
+.dropdownmenus .dijitTabContainerBottom-container {
+	border-bottom: none;
+}
+.dropdownmenus .dijitTabContainerBottom-tabs .dijitTabChecked {
+	border-top-color:white;
+}
+.dropdownmenus .dijitTabContainerBottomStrip {
+	padding-bottom: 2px;
+	border: 1px solid #ccc;
+	background: #f2f2f2;
+	border-top: none;
+}
+.dropdownmenus .dijitTabContainerRight-tabs {
+	border-color: #ccc;
+	height: 100%;
+	padding-top: 3px;
+}
+.dropdownmenus .dijitTabContainerRightStrip {
+	margin-left: -1px;
+}
+.dropdownmenus .dijitTabContainerRight-container {
+	border-right: none;
+}
+.dropdownmenus .dijitTabContainerRight-tabs .dijitTabChecked {
+	border-left-color:white;
+}
+.dropdownmenus .dijitTabContainerRightStrip {
+	padding-right: 2px;
+	border: 1px solid #ccc;
+}
+.dropdownmenus .dijitTabContainerRightStrip {
+	background: #f2f2f2;
+}
+.dropdownmenus .dijitTabContainerLeft-tabs {
+	border-color: #ccc;
+	padding-top: 3px;
+	height: 100%;
+}
+.dropdownmenus .dijitTabContainerLeft-container {
+	border-left: none;
+}
+.dropdownmenus .dijitTabContainerLeft-tabs .dijitTabChecked {
+	border-right-color:white;
+}
+.dropdownmenus .dijitTabContainerLeftStrip {
+	padding-left: 2px;
+	border: 1px solid #ccc;
+	background: #f2f2f2;
+	border-right: none;
+}
+.dropdownmenus .dijitTabContainerLeft-tabs .dijitTab,
+.dropdownmenus .dijitTabContainerRight-tabs .dijitTab {
+	margin-right:0;
+	margin-bottom:4px;	
+}
+.dropdownmenus .dijitTabContainerTop-dijitContentPane .dijitTabContainerTop-tabs {
+	border-left: 0 solid #ccc;
+	border-top: 0 solid #ccc;
+	border-right: 0 solid #ccc;
+	padding-top: 0;
+	padding-left: 0;
+}
+.dropdownmenus .dijitTabContainer .tabStripButton {
+	margin-right: 0;
+	padding-top: 2px;
+	z-index: 12;
+}
+.dropdownmenus .dijitTabContainerBottom .tabStripButton {
+	padding-top: 3px;
+}
+.dropdownmenus .tabStrip-disabled .tabStripButton {
+	padding-bottom: 3px;
+	padding-top: 1px;
+}
+.dropdownmenus .tabStripButton {
+	padding: 3px 2px 4px 2px;
+}
+.dropdownmenus .dijitTabStripIcon {
+	height: 14px;
+	width: 14px;
+	background: url(../images/spriteRoundedIconsSmall.png) no-repeat left top ;
+}
+.dj_ie6 .dropdownmenus .dijitTabStripIcon {
+	background-image: url(../images/spriteRoundedIconsSmall.gif);
+}
+.dropdownmenus .dijitTabStripSlideRightIcon {
+	background-position: -30px top;
+}
+.dropdownmenus .dijitTabStripMenuIcon {
+	background-position: -15px top;
+}

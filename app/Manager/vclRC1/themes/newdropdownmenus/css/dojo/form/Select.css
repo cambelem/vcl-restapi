@@ -1,0 +1,41 @@
+
+.dropdownmenus .dijitSelectError .dijitButtonContents,
+.dropdownmenus .dijitSelectHover .dijitArrowButton,
+.dropdownmenus .dijitSelectActive .dijitArrowButton,
+.dropdownmenus .dijitSelectOpened .dijitArrowButton,
+.dropdownmenus .dijitSelectDisabled .dijitArrowButton,
+.dropdownmenus .dijitSelectReadOnly .dijitArrowButton {
+	background: transparent none;
+}
+.dropdownmenus .dijitSelect .dijitArrowButton {
+	background: #fff url("../images/buttonEnabled.png") repeat-x bottom left;
+	border-width: 0;
+}
+.dropdownmenus .dijitSelectDisabled,
+.dropdownmenus .dijitSelectDisabled TD {
+	border-color: #d5d5d5 #bdbdbd #bdbdbd #d5d5d5 !important;
+	background:#e4e4e4 url("../images/buttonDisabled.png") top repeat-x;
+}
+.dj_ie .dropdownmenus .dijitSelectDisabled TD * {
+	filter: gray() alpha(opacity=50);
+}
+.dropdownmenus .dijitSelectHover,
+.dropdownmenus .dijitSelectHover TD {
+	border-color:#a5beda #5c7590 #5c7590 #a5beda !important;
+	color:#243C5F;
+	background:#fcfdff url("../images/buttonHover.png") repeat-x bottom;
+}
+.dropdownmenus .dijitSelectActive,
+.dropdownmenus .dijitSelectOpened,
+.dropdownmenus .dijitSelectActive TD,
+.dropdownmenus .dijitSelectOpened TD {
+	border-color:#366dba !important;
+	background: #ededed url("../images/buttonActive.png") bottom repeat-x;
+}
+.dropdownmenus .dijitSelectMenu td {
+	padding: 0;
+}
+.dropdownmenus .dijitSelectMenu .dijitMenuItemLabel,
+.dropdownmenus .dijitSelectMenu .dijitMenuArrowCell {
+	padding: 0.1em 0.2em;
+}

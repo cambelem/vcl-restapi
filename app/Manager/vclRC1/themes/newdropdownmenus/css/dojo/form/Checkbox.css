@@ -1,0 +1,45 @@
+.dropdownmenus .dijitToggleButton .dijitCheckBoxIcon {
+	background-image: url('../images/checkmarkNoBorder.png');
+}
+.dj_ie6 .dropdownmenus .dijitToggleButton .dijitCheckBoxIcon {
+	background-image: url('../images/checkmarkNoBorder.gif');
+}
+.dropdownmenus .dijitCheckBox,
+.dropdownmenus .dijitCheckBoxIcon			{
+	background-image: url('../images/checkmark.png'); 
+	background-repeat: no-repeat;
+	width: 16px;
+	height: 16px;
+	margin: 0 2px 0 0;
+	padding: 0;
+}
+.dj_ie6 .dropdownmenus .dijitCheckBox,
+.dj_ie6 .dropdownmenus .dijitCheckBoxIcon			{
+	background-image: url('../images/checkmark.gif'); 
+}
+.dropdownmenus .dijitCheckBox,
+.dropdownmenus .dijitToggleButton .dijitCheckBoxIcon {
+	
+	background-position: -16px;
+}
+.dropdownmenus .dijitCheckBoxChecked,
+.dropdownmenus .dijitToggleButtonChecked .dijitCheckBoxIcon {
+	
+	background-position: 0;
+}
+.dropdownmenus .dijitCheckBoxDisabled {
+	
+	background-position: -48px;
+}
+.dropdownmenus .dijitCheckBoxCheckedDisabled {
+	
+	background-position: -32px;
+}
+.dropdownmenus .dijitCheckBoxHover {
+	
+	background-position: -80px;
+}
+.dropdownmenus .dijitCheckBoxCheckedHover {
+	
+	background-position: -64px;
+}

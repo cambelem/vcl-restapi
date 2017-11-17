@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<head>
+
+  <title>Academic Cloud</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+  <link href="themes/newdropdownmenus/css/app.css" rel="stylesheet" type="text/css">
+
+  <!-- Chatbot javascript files -->
+  <script src="/vcl/themes/newdropdownmenus/js/chatbot.js" type="text/javascript"></script>
+  <script src="/vcl/themes/newdropdownmenus/js/common.js"></script>
+  <script src="/vcl/themes/newdropdownmenus/js/api.js"></script>
+  <script src="/vcl/themes/newdropdownmenus/js/conversation.js"></script>
+  <script src="/vcl/themes/newdropdownmenus/js/payload.js"></script>
+  <script src="/vcl/themes/newdropdownmenus/js/global.js"></script>
+
+  <link rel="stylesheet" href="themes/newdropdownmenus/css/firstPage.css">
+
+
+</head>
+<body>
+
+  <div id="flexible" class="container">
+
+    <div class="wrapper">
+
+      <header >
+
+        <nav class="navbar">
+          <div class="container-fluid">
+            <div class="navbar-header">
+              <a class="navbar-brand" href="#">IBM Academic Cloud</a>
+            </div>
+
+
+            <div class="nav navbar-nav navbar-right">
+
+                <div id="contentParent" class="responsive-columns-wrapper">
+                  <!-- <div class="chat-column"> -->
+
+                    <div id="openchat">
+                      <span id="chatIcon" class="glyphicon glyphicon-comment" aria-hidden="true"></span>
+                    </div>
+
+                  <!-- </div> <! chat column -->
+
+
+                  <div id="payload-column" class="fixed-column content-column">
+                    <div id="payload-initial-message">
+                      Type something to see the output
+                    </div>
+                    <div id="payload-request" class="payload">
+                    </div>
+
+                    <div id="payload-response" class="payload">
+                    </div>
+
+                  </div> <!--payload-column -->
+
+                </div> <!--contentParent -->
+
+                <div id="textInputDummy"></div>
+
+            </div>    <!-- chatbot navbar element -->
+
+          </div>
+        </nav>
+
+      </header>
+
+
+      <div class="container page-content">
+
+        <div class="text-center" id="heading">Welcome to the Academic Cloud</div>
+
+        <div id="chatWrapper">
+          <button id="closeChatbot" type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <div id="scrollingChat">
+          </div>
+          <label for="textInput" class="inputOutline">
+            <input id="textInput" class="input responsive-column"
+            placeholder="Type something" type="text"
+            onkeydown="ConversationPanel.inputKeyDown(event, this)">
+          </label>
+        </div>
+
+
+      <!-- End of header content -->

@@ -1,0 +1,55 @@
+
+.dropdownmenus .dijitBorderContainer {
+	background-color: #fcfcfc;
+	padding: 5px;
+}
+.dropdownmenus .dijitSplitContainer-child,
+.dropdownmenus .dijitBorderContainer-child {
+	
+	border: 1px #ccc solid;
+}
+.dropdownmenus .dijitBorderContainer-dijitTabContainerTop,
+.dropdownmenus .dijitBorderContainer-dijitTabContainerBottom,
+.dropdownmenus .dijitBorderContainer-dijitTabContainerLeft,
+.dropdownmenus .dijitBorderContainer-dijitTabContainerRight {
+	
+	 border: none;
+}
+.dropdownmenus .dijitBorderContainer-dijitBorderContainer {
+	
+	border: none;
+	padding: 0;
+}
+.dropdownmenus .dijitSplitterH,
+.dropdownmenus .dijitGutterH {
+	background:#fcfcfc;
+	border:0;
+	height:5px;
+}
+.dropdownmenus .dijitSplitterH .dijitSplitterThumb {
+	background:#B0B0B0 none;
+	height:1px;
+	top:2px;
+	width:19px;
+}
+.dropdownmenus .dijitSplitterV,
+.dropdownmenus .dijitGutterV {
+	background:#fcfcfc;
+	border:0;
+	width:5px;
+}
+.dropdownmenus .dijitSplitterV .dijitSplitterThumb {
+	background:#B0B0B0 none;
+	height:19px;
+	left:2px;
+	width:1px;
+}
+.dropdownmenus .dijitSplitterActive {
+	font-size: 1px;
+	background-image: none;
+	background-color: #aaa;
+	-moz-opacity: 0.6;
+	opacity: 0.6;
+	filter: Alpha(Opacity=60);
+	margin: 0;
+}

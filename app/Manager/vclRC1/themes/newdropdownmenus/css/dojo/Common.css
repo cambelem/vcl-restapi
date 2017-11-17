@@ -1,0 +1,27 @@
+
+.dropdownmenus .dojoDndItemOver {
+	background-image: url(images/treeHover.png);
+}
+.dropdownmenus .dojoDndItemAnchor,
+.dropdownmenus .dojoDndItemSelected {
+	background-color: #E2EBFE;
+}
+.dropdownmenus table.dojoDndAvatar { -moz-border-radius: 0; border: 1px solid #ccc; border-collapse: collapse; background-color: #fff; font-size: 75%; color: black;}
+.dropdownmenus .dojoDndAvatar td	{ border: none; }
+.dropdownmenus .dojoDndAvatar tr	{ border: none; }
+.dropdownmenus .dojoDndAvatarHeader td	{ height: 20px; padding: 0 0 0 21px; }
+.dropdownmenus .dojoDndAvatarItem td { padding: 2px;}
+.dropdownmenus.dojoDndMove .dojoDndAvatarHeader	{background-color: #f58383; background-image: url(images/dndNoMove.png); background-repeat: no-repeat; background-position: 2px center;}
+.dropdownmenus.dojoDndCopy .dojoDndAvatarHeader	{background-color: #f58383; background-image: url(images/dndNoCopy.png); background-repeat: no-repeat; background-position: 2px center;}
+.dropdownmenus.dojoDndMove .dojoDndAvatarCanDrop .dojoDndAvatarHeader	{background-color: #97e68d; background-image: url(images/dndMove.png); background-repeat: no-repeat; background-position: 2px center;}
+.dropdownmenus.dojoDndCopy .dojoDndAvatarCanDrop .dojoDndAvatarHeader	{background-color: #97e68d; background-image: url(images/dndCopy.png); background-repeat: no-repeat; background-position: 2px center;}
+.dropdownmenus .dijitIconLoading {
+	background:url('images/loading.gif') no-repeat left center;
+	width: 24px;
+	height: 24px;
+}
+.dropdownmenus .dijitIconError {
+	background:url('images/warning.png') no-repeat left center;
+	width: 16px;
+	height: 16px;
+}

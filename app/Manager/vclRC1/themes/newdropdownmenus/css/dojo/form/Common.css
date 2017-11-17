@@ -1,0 +1,56 @@
+
+.dropdownmenus .dijitInputContainer input {
+	margin: 0 0.1em;
+}
+.dropdownmenus .dijitTextArea {
+	padding: 3px;
+}
+.dropdownmenus .dijitSelect .dijitButtonContents,
+.dropdownmenus .dijitSelect,
+.dropdownmenus .dijitTextBox {
+	
+	background:#fff url("../images/validationInputBg.png") repeat-x top left;
+	#background:#fff url('../images/validationInputBg.gif') repeat-x top left;
+}
+.dropdownmenus .dijitSelect,
+.dropdownmenus .dijitTextBox {
+	border:1px solid #b3b3b3;
+}
+.dropdownmenus .dijitSelect .dijitArrowButton,
+.dropdownmenus .dijitComboBox .dijitButtonNode {
+	padding: 0 0.2em;
+}
+.dropdownmenus .dijitSelect .dijitButtonContents,
+.dropdownmenus .dijitTextBox .dijitButtonNode {
+	
+	border-color: #9b9b9b;
+}
+.dropdownmenus .dijitSelectFocused,
+.dropdownmenus .dijitTextBoxFocused {
+	
+	border-color:#406b9b;
+}
+.dropdownmenus .dijitSelectFocused TD,
+.dropdownmenus .dijitTextBoxFocused .dijitButtonNode {
+	border-color:#366dba;
+}
+.dropdownmenus .dijitError {
+	background-color:#f9f7ba;
+	background-image:none;
+}
+.dropdownmenus .dijitErrorFocused {
+	background-color:#f9f999;
+	background-image:none;
+}
+.dropdownmenus .dijitValidationTextBoxError .dijitValidationIcon {
+	
+	width: 16px;
+	background: transparent url('../images/warning.png') no-repeat center center;
+}
+.dropdownmenus .dijitComboBoxHighlightMatch {
+	background-color:#a5beda;
+}
+.dropdownmenus .dijitFocusedLabel {
+	
+	outline: 1px dotted #666666;
+}

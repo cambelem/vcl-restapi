@@ -1,0 +1,20 @@
+
+.dropdownmenus .dijitTimePickerTick,
+.dropdownmenus .dijitTimePickerMarker {
+	border-color: #ccc;
+}
+.dropdownmenus .dijitTimePickerTick {
+	color:gray;
+}
+.dropdownmenus .dijitTimePickerMarker {
+	background:#d3d3d3 url("images/titleBar.png") repeat-x top;
+	color:#293a4b;
+}
+.dropdownmenus .dijitTimePickerItemSelected {
+	color: black;
+	background: #bbc4d0 none;
+}
+.dropdownmenus .dijitTimePickerItemHover {
+	background: #60a1ea none;
+	color:white;
+}

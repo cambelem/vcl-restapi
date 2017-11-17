@@ -1,0 +1,5 @@
+.ht-inc/secrets.php
+.ht-inc/pubkey.pem
+.ht-inc/keys.pem
+.ht-inc/cryptkey/
+.DS_Store
