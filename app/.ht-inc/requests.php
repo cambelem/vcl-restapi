@@ -4692,7 +4692,7 @@ function processRequestInput($data = NULL) {
 	if($return['ending'] == 'indefinite')
 		$end = datetimeToUnix('2038-01-01 00:00:00');
 	elseif($return['ending'] == 'duration')
-		$end = $start + ($return['duration'] * 60) + 901; //Eric cAmbel added 901 (Take away after testing)
+		$end = $start + ($return['duration'] * 60); //Eric cAmbel added 901 (Take away after testing)
 	if($start < $now) {
 		$return['err'] = 1;
 		$return['errmsg'] = i('The submitted start time is in the past.');
