@@ -215,6 +215,42 @@ class ReservationManager
       }
       # TODO configs
       //saveRequestConfigs($requestid, $data['imageid'], $data['configs'], $data['configvars']);
+
+      // Successfully added?
+      return 1;
     }
+  }
+
+  function deleteReservation($id)
+  {
+    // TODO: $id is trusting that id is a number. Come back to this later
+    $requestid = $id;
+
+    // getRequestInfo grabbing alot of info not needed below (except serverrequest)
+    $request = getRequestInfo($requestid, 1);
+    if(is_null($requestid)) {
+      viewRequests();
+      return;
+    }
+
+    if($request['serverrequest']) {
+      $query = "SELECT id FROM serverrequest WHERE requestid = $requestid";
+      $qh = doQuery($query);
+      if($row = mysql_fetch_assoc($qh)) {
+        $query = "DELETE FROM serverrequest WHERE requestid = $requestid";
+        doQuery($query, 152);
+        deleteVariable("fixedIPsr{$row['id']}");
+      }
+    }
+
+    $query = "DELETE FROM request WHERE id = $requestid";
+    doQuery($query, 153);
+
+    $query = "DELETE FROM reservation WHERE requestid = $requestid";
+    doQuery($query, 154);
+
+    // assumes everything deleted successfull
+    // TODO: Make sure it's deletd.
+    return 1;
   }
 }

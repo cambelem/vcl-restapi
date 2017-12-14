@@ -41,24 +41,12 @@ class ReservationController extends Controller
 
     public function createReservation(Request $request)
     {
+        /*TODO:
+
+        Add correct variables for validation below:
 
 
-      /*
-        VARIABLES NEEDED:
-        type of reservation: basic, imaging, server
-          determine reservation access
-        date for reservation: duration, indefinite, endat
-          determine access
-        image id
-        no user check?
-        revision id for the image?
-        if duration is selected:
-        start/end selected
-
-
-      */
-
-        /*$this->validate($request, [
+        $this->validate($request, [
           'requestid'         => 'required',
           'computerid'        => 'required',
           'imageid'           => 'required',
@@ -81,30 +69,12 @@ class ReservationController extends Controller
 
         $this->end();
 
-        if ($results != NULL)
-          return json_encode($results);
-        else {
+        if ($results != NULL){
+          return response()->json(['status' => 'success']);
+        }else {
           return response()->json(['status' => 'fail'],404);
         }
 
-/*
-        $reservation = Reservations::find($id);
-        $reservation->requestid         = $request->requestid;
-        $reservation->computerid        = $request->computerid;
-        $reservation->imageid           = $request->imageid;
-        $reservation->imagerevisionid   = $request->imagerevisionid;
-        $reservation->managementnodeid  = $request->managementnodeid;
-        $reservation->remoteIP          = $request->remoteIP;
-        $date = new \DateTime($request->lastcheck);
-        $dd = $date->format('Y-m-d');
-        $reservation->lastcheck         = $dd;
-        $reservation->pw                = $request->pw;
-        $reservation->connectIP         = $request->connectIP;
-        $reservation->connectport       = $request->connectport;
-
-        $reservation->save();
-        return response()->json(['status' => 'success']);
-        */
     }
 
 /*
@@ -178,9 +148,29 @@ exit;
 
     public function deleteReservation($id)
     {
+
+        if (!isset($id)){
+          return response()->json(['status' => 'fail'],404);
+        }
+
+        $this->initBegin();
+
+        $manager = new ReservationManager();
+        $results = $manager->deleteReservation($id);
+
+        $this->end();
+
+        if ($results != NULL){
+          return response()->json(['status' => 'success']);
+        }else {
+          return response()->json(['status' => 'fail'],404);
+        }
+
+        /* Eloquent way of removing a record
         if(Reservations::destroy($id)){
             return response()->json(['status' => 'success']);
         }
+        */
     }
 }
 
