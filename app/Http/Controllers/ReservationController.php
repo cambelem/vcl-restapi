@@ -39,9 +39,26 @@ class ReservationController extends Controller
         }
     }
 
-    public function createReservation(Request $request, $id)
+    public function createReservation(Request $request)
     {
-        $this->validate($request, [
+
+
+      /*
+        VARIABLES NEEDED:
+        type of reservation: basic, imaging, server
+          determine reservation access
+        date for reservation: duration, indefinite, endat
+          determine access
+        image id
+        no user check?
+        revision id for the image?
+        if duration is selected:
+        start/end selected
+
+
+      */
+
+        /*$this->validate($request, [
           'requestid'         => 'required',
           'computerid'        => 'required',
           'imageid'           => 'required',
@@ -53,6 +70,23 @@ class ReservationController extends Controller
           'connectIP'         => 'required',
           'connectport'       => 'required'
         ]);
+*/
+
+        $data = $request->all();
+
+        $this->initBegin();
+
+        $manager = new ReservationManager();
+        $results = $manager->createReservation($data);
+
+        $this->end();
+
+        if ($results != NULL)
+          return json_encode($results);
+        else {
+          return response()->json(['status' => 'fail'],404);
+        }
+
 /*
         $reservation = Reservations::find($id);
         $reservation->requestid         = $request->requestid;

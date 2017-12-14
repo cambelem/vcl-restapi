@@ -611,7 +611,7 @@ function checkCryptkey() {
 		$fh = fopen($idfile, 'r');
 		$id = fread($fh, 50);
 		fclose($fh);
-		$_id = mysql_real_escape_string($id);
+		$_id = mysqli_real_escape_string($id);
 
 		$query = "SELECT id "
 		       . "FROM cryptkey  "
@@ -979,7 +979,7 @@ function main() {
 ////////////////////////////////////////////////////////////////////////////////
 function vclAbort($errcode, $query="") {
 
-	global $mysql_link_vcl, $mysql_link_acct, $ERRORS, $user, $mode;
+	global $mysqli_link_vcl, $mysqli_link_acct, $ERRORS, $user, $mode;
 	global $ENABLE_ITECSAUTH, $requestInfo, $aborting;
 	if(! isset($aborting))
 		$aborting = 1;
@@ -989,11 +989,11 @@ function vclAbort($errcode, $query="") {
 		xmlRPCabort($errcode, $query);
 	if(ONLINEDEBUG && checkUserHasPerm('View Debug Information')) {
 		if($errcode >= 100 && $errcode < 400) {
-			print "<font color=red>" . mysqli_error($mysql_link_vcl) . "</font><br>\n";
-			error_log(mysqli_error($mysql_link_vcl));
+			print "<font color=red>" . mysqli_error($mysqli_link_vcl) . "</font><br>\n";
+			error_log(mysqli_error($mysqli_link_vcl));
 			if($ENABLE_ITECSAUTH) {
-				print "<font color=red>" . mysqli_error($mysql_link_acct) . "</font><br>\n";
-				error_log(mysqli_error($mysql_link_acct));
+				print "<font color=red>" . mysqli_error($mysqli_link_acct) . "</font><br>\n";
+				error_log(mysqli_error($mysqli_link_acct));
 			}
 			print "$query<br>\n";
 			error_log($query);
@@ -1010,9 +1010,9 @@ function vclAbort($errcode, $query="") {
 	else {
 		$message = "";
 		if($errcode >= 100 && $errcode < 400) {
-			$message .= mysqli_error($mysql_link_vcl) . "\n";
+			$message .= mysqli_error($mysqli_link_vcl) . "\n";
 			if($ENABLE_ITECSAUTH)
-				$message .= mysqli_error($mysql_link_acct) . "\n";
+				$message .= mysqli_error($mysqli_link_acct) . "\n";
 			$message .= $query . "\n";
 		}
 		$message .= "ERROR($errcode): " . $ERRORS["$errcode"] . "\n";
@@ -1090,13 +1090,13 @@ function validateUserid($loginid) {
 	if(empty($affilid))
 		return 0;
 
-	$escloginid = mysql_real_escape_string($loginid);
+	$escloginid = mysqli_real_escape_string($loginid);
 	$query = "SELECT id "
 	       . "FROM user "
 	       . "WHERE unityid = '$escloginid' AND "
 	       .       "affiliationid = $affilid";
 	$qh = doQuery($query, 101);
-	if(mysql_num_rows($qh))
+	if(mysqli_num_rows($qh))
 		return 1;
 
 	if($rc == 0 &&
@@ -1163,7 +1163,7 @@ function getAffilidAndLogin(&$login, &$affilid) {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// \fn mysql_connect_plus($host, $user, $pwd)
+/// \fn mysqli_connect_plus($host, $user, $pwd)
 ///
 /// \param $host - mysql host
 /// \param $user - userid to use for connection
@@ -1176,7 +1176,7 @@ function getAffilidAndLogin(&$login, &$affilid) {
 /// and returns the identifier
 ///
 ////////////////////////////////////////////////////////////////////////////////
-function mysql_connect_plus($host, $user, $pwd, $db) {
+function mysqli_connect_plus($host, $user, $pwd, $db) {
 	$timeout = 5;             /* timeout in seconds */
 
 	if($fp = @fsockopen($host, 3306, $errno, $errstr, $timeout)) {
@@ -1193,36 +1193,36 @@ function mysql_connect_plus($host, $user, $pwd, $db) {
 /// \fn dbConnect()
 ///
 /// \brief opens connections to database, the resource identifiers are\n
-/// \b $mysql_link_vcl - for vcl database\n
-/// \b $mysql_link_acct - for accounts database\n
+/// \b $mysqli_link_vcl - for vcl database\n
+/// \b $mysqli_link_acct - for accounts database\n
 ///
 ////////////////////////////////////////////////////////////////////////////////
 function dbConnect() {
-	global $vclhost, $vcldb, $vclusername, $vclpassword, $mysql_link_vcl;
-	global $accthost, $acctusername, $acctpassword, $mysql_link_acct;
+	global $vclhost, $vcldb, $vclusername, $vclpassword, $mysqli_link_vcl;
+	global $accthost, $acctusername, $acctpassword, $mysqli_link_acct;
 	global $ENABLE_ITECSAUTH;
 
 	if($ENABLE_ITECSAUTH) {
 		// open a connection to mysql server for accounts
-		if($mysql_link_acct = mysql_connect_plus($accthost, $acctusername, $acctpassword))
-			mysql_select_db("accounts", $mysql_link_acct);
+		if($mysqli_link_acct = mysqli_connect_plus($accthost, $acctusername, $acctpassword))
+			mysqli_select_db("accounts", $mysqli_link_acct);
 		else
 			$ENABLE_ITECSAUTH = 0;
 	}
 
 	// open a connection to mysql server for vcl
-	if(! $mysql_link_vcl = mysql_connect_plus($vclhost, $vclusername, $vclpassword, $vcldb)) {
+	if(! $mysqli_link_vcl = mysqli_connect_plus($vclhost, $vclusername, $vclpassword, $vcldb)) {
 		die("Error connecting to $vclhost.<br>\n");
 	}
 	// select the vcl database
-	//mysql_select_db($vcldb, $mysql_link_vcl) or vclAbort(104);
+	//mysqli_select_db($vcldb, $mysqli_link_vcl) or vclAbort(104);
 
-	//eturn $mysql_link_vcl;
+	//eturn $mysqli_link_vcl;
 
 	/*
 	Testing connection
 	$sql = "select * from user";
-	$result = $mysql_link_vcl->query($sql);
+	$result = $mysqli_link_vcl->query($sql);
 
 	var_dump($result->fetch_assoc());
 	*/
@@ -1236,10 +1236,10 @@ function dbConnect() {
 ///
 ////////////////////////////////////////////////////////////////////////////////
 function dbDisconnect() {
-	global $mysql_link_vcl, $mysql_link_acct, $ENABLE_ITECSAUTH;
-	mysqli_close($mysql_link_vcl);
+	global $mysqli_link_vcl, $mysqli_link_acct, $ENABLE_ITECSAUTH;
+	mysqli_close($mysqli_link_vcl);
 	if($ENABLE_ITECSAUTH)
-		mysqli_close($mysql_link_acct);
+		mysqli_close($mysqli_link_acct);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1257,9 +1257,9 @@ function dbDisconnect() {
 ///
 ////////////////////////////////////////////////////////////////////////////////
 function doQuery($query, $errcode=101, $db="vcl", $nolog=0) {
-	global $mysql_link_vcl, $mysql_link_acct, $user, $mode, $ENABLE_ITECSAUTH;
+	global $mysqli_link_vcl, $mysqli_link_acct, $user, $mode, $ENABLE_ITECSAUTH;
 
-	//$mysql_link_vcl =
+	//$mysqli_link_vcl =
 
 	if($db == "vcl") {
 		if(QUERYLOGGING != 0 && (! $nolog) &&
@@ -1281,11 +1281,11 @@ function doQuery($query, $errcode=101, $db="vcl", $nolog=0) {
 			   .        "NOW(), "
 			   .        "'$mode', "
 			   .        "'$logquery')";
-			mysqli_query($mysql_link_vcl, $q);
+			mysqli_query($mysqli_link_vcl, $q);
 		}
 
-		for($i = 0; ! ($qh = mysqli_query($mysql_link_vcl, $query)) && $i < 3; $i++) {
-			if(mysqli_errno($mysql_link_vcl) == '1213') # DEADLOCK, sleep and retry
+		for($i = 0; ! ($qh = mysqli_query($mysqli_link_vcl, $query)) && $i < 3; $i++) {
+			if(mysqli_errno($mysqli_link_vcl) == '1213') # DEADLOCK, sleep and retry
 				usleep(50);
 			else
 				vclAbort($errcode, $query);
@@ -1293,7 +1293,7 @@ function doQuery($query, $errcode=101, $db="vcl", $nolog=0) {
 	}
 	elseif($db == "accounts") {
 		if($ENABLE_ITECSAUTH)
-			$qh = mysqli_query($mysql_link_acct, $query) or vclAbort($errcode, $query);
+			$qh = mysqli_query($mysqli_link_acct, $query) or vclAbort($errcode, $query);
 		else
 			$qh = NULL;
 	}
@@ -1304,14 +1304,14 @@ function doQuery($query, $errcode=101, $db="vcl", $nolog=0) {
 ///
 /// \fn dbLastInsertID()
 ///
-/// \return last insert id for $mysql_link_vcl
+/// \return last insert id for $mysqli_link_vcl
 ///
-/// \brief calls mysql_insert_id for $mysql_link_vcl
+/// \brief calls mysqli_insert_id for $mysqli_link_vcl
 ///
 ////////////////////////////////////////////////////////////////////////////////
 function dbLastInsertID() {
-	global $mysql_link_vcl;
-	return mysql_insert_id($mysql_link_vcl);
+	global $mysqli_link_vcl;
+	return mysqli_insert_id($mysqli_link_vcl);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1935,7 +1935,7 @@ function checkClearImageMeta($imagemetaid, $imageid, $ignorefield='') {
 	$qh = doQuery($query, 101);
 	$row = mysqli_fetch_assoc($qh);
 	$alldefaults = 1;
-	if(mysql_num_rows($qh) == 0)
+	if(mysqli_num_rows($qh) == 0)
 		# it is possible that the imagemeta record could have been deleted before
 		#   this was submitted
 		return 1;
@@ -2637,7 +2637,7 @@ function updateResourcePrivs($group, $node, $adds, $removes) {
 	else
 		$groupid = getResourceGroupID($group);
 	foreach($adds as $type) {
-		$type = mysql_real_escape_string($type);
+		$type = mysqli_real_escape_string($type);
 		$query = "INSERT IGNORE INTO resourcepriv ("
 		       .        "resourcegroupid, "
 		       .        "privnodeid, "
@@ -2649,7 +2649,7 @@ function updateResourcePrivs($group, $node, $adds, $removes) {
 		doQuery($query, 377);
 	}
 	foreach($removes as $type) {
-		$type = mysql_real_escape_string($type);
+		$type = mysqli_real_escape_string($type);
 		$query = "DELETE FROM resourcepriv "
 		       . "WHERE resourcegroupid = $groupid AND "
 		       .       "privnodeid = $node AND "
@@ -2981,7 +2981,7 @@ function getCryptKeyID() {
 	$fh = fopen($idfile, 'r');
 	$id = fread($fh, 50);
 	fclose($fh);
-	$_id = mysql_real_escape_string($id);
+	$_id = mysqli_real_escape_string($id);
 
 	$query = "SELECT id "
 	       . "FROM cryptkey  "
@@ -3760,7 +3760,7 @@ function getUserlistID($loginid, $noadd=0) {
 	       . "WHERE unityid = '$loginid' AND "
 	       .       "affiliationid = $affilid";
 	$qh = doQuery($query, 140);
-	if(mysql_num_rows($qh)) {
+	if(mysqli_num_rows($qh)) {
 		$row = mysqli_fetch_row($qh);
 		return $row[0];
 	}
@@ -3831,7 +3831,7 @@ function getUserUnityID($userid) {
 		return $cache['unityids'][$userid];
 	$query = "SELECT unityid FROM user WHERE id = $userid";
 	$qh = doQuery($query, 101);
-	if(mysql_num_rows($qh)) {
+	if(mysqli_num_rows($qh)) {
 		$row = mysqli_fetch_row($qh);
 		$cache['unityids'][$userid] = $row[0];
 		return $row[0];
@@ -3851,10 +3851,10 @@ function getUserUnityID($userid) {
 ///
 ////////////////////////////////////////////////////////////////////////////////
 function getAffiliationID($affil) {
-	$affil = mysql_real_escape_string($affil);
+	$affil = mysqli_real_escape_string($affil);
 	$query = "SELECT id FROM affiliation WHERE name = '$affil'";
 	$qh = doQuery($query, 101);
-	if(mysql_num_rows($qh)) {
+	if(mysqli_num_rows($qh)) {
 		$row = mysqli_fetch_row($qh);
 		return $row[0];
 	}
@@ -3875,7 +3875,7 @@ function getAffiliationID($affil) {
 function getAffiliationName($affilid) {
 	$query = "SELECT name FROM affiliation WHERE id = $affilid";
 	$qh = doQuery($query, 101);
-	if(mysql_num_rows($qh)) {
+	if(mysqli_num_rows($qh)) {
 		$row = mysqli_fetch_row($qh);
 		return $row[0];
 	}
@@ -4158,7 +4158,7 @@ function processInputData($data, $type, $addslashes=0, $defaultvalue=NULL) {
 			if(! is_string($value))
 				$return[$index] = $defaultvalue;
 			elseif($addslashes)
-				$return[$index] = mysql_real_escape_string($value);
+				$return[$index] = mysqli_real_escape_string($value);
 		}
 		return $return;
 	}
@@ -4167,7 +4167,7 @@ function processInputData($data, $type, $addslashes=0, $defaultvalue=NULL) {
 		if(strlen($return) == 0)
 			$return = $defaultvalue;
 		elseif($addslashes)
-			$return = mysql_real_escape_string($return);
+			$return = mysqli_real_escape_string($return);
 	}
 
 	return $return;
@@ -4523,9 +4523,9 @@ function addUser($loginid) {
 ////////////////////////////////////////////////////////////////////////////////
 function updateUserPrefs($userid, $preferredname, $width, $height, $bpp, $audio,
                          $mapdrives, $mapprinters, $mapserial, $rdpport) {
-	global $mysql_link_vcl;
-	$preferredname = mysql_real_escape_string($preferredname);
-	$audio = mysql_real_escape_string($audio);
+	global $mysqli_link_vcl;
+	$preferredname = mysqli_real_escape_string($preferredname);
+	$audio = mysqli_real_escape_string($audio);
 	if($rdpport == 3389)
 		$rdpport = 'NULL';
 	$query = "UPDATE user SET "
@@ -4540,7 +4540,7 @@ function updateUserPrefs($userid, $preferredname, $width, $height, $bpp, $audio,
 	       .        "rdpport = $rdpport "
 	       . "WHERE id = $userid";
 	doQuery($query, 270);
-	return mysql_affected_rows($mysql_link_vcl);
+	return mysqli_affected_rows($mysqli_link_vcl);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4727,7 +4727,7 @@ function isAvailable($images, $imageid, $imagerevisionid, $start, $end,
 			$query .=   "AND rq.id != $requestid ";
 		$query .= "LIMIT 1";
 		$qh = doQuery($query, 101);
-		if(mysql_num_rows($qh)) {
+		if(mysqli_num_rows($qh)) {
 			return debugIsAvailable(-3, 2, $start, $end, $imagerevisionid);
 		}
 
@@ -4737,7 +4737,7 @@ function isAvailable($images, $imageid, $imagerevisionid, $start, $end,
 		       . "WHERE IPaddress = '$ip' AND "
 		       .       "stateid != 1";
 		$qh = doQuery($query, 101);
-		if(mysql_num_rows($qh)) {
+		if(mysqli_num_rows($qh)) {
 			return debugIsAvailable(-4, 16, $start, $end, $imagerevisionid);
 		}
 	}
@@ -5071,7 +5071,7 @@ function isAvailable($images, $imageid, $imagerevisionid, $start, $end,
 			       .       "(type != 'virtualmachine' OR "
 			       .       "vmhostid IS NOT NULL)";
 			$qh = doQuery($query);
-			if(mysql_num_rows($qh)) {
+			if(mysqli_num_rows($qh)) {
 				if($now)
 					return debugIsAvailable(-4, 18, $start, $end, $imagerevisionid, $computerids, $currentids, $blockids, array(), $virtual);
 				$requestInfo['ipwarning'] = 1;
@@ -5083,7 +5083,7 @@ function isAvailable($images, $imageid, $imagerevisionid, $start, $end,
 			if($requestid)
 				$query .= " AND id != $compid"; # TODO test this
 			$qh = doQuery($query);
-			$cnt = mysql_num_rows($qh);
+			$cnt = mysqli_num_rows($qh);
 			if($cnt > 1) {
 				if($now)
 					return debugIsAvailable(-4, 22, $start, $end, $imagerevisionid, $computerids, $currentids, $blockids, array(), $virtual);
@@ -5446,7 +5446,7 @@ function allocComputer($blockids, $currentids, $computerids, $start, $end,
 ////////////////////////////////////////////////////////////////////////////////
 function getSemaphore($imageid, $imagerevisionid, $mgmtnodeid, $compid, $start,
                       $end, $requestid=0) {
-	global $mysql_link_vcl, $uniqid;
+	global $mysqli_link_vcl, $uniqid;
 	$query = "INSERT INTO semaphore "
 	       . "SELECT c.id, "
 	       .        "$imageid, "
@@ -5460,7 +5460,7 @@ function getSemaphore($imageid, $imagerevisionid, $mgmtnodeid, $compid, $start,
 	       .       "(s.expires IS NULL OR s.expires < NOW()) "
 	       . "LIMIT 1";
 	doQuery($query);
-	$rc = mysql_affected_rows($mysql_link_vcl);
+	$rc = mysqli_affected_rows($mysqli_link_vcl);
 
 	# check to see if another process allocated this one
 	if($rc) {
@@ -5476,7 +5476,7 @@ function getSemaphore($imageid, $imagerevisionid, $mgmtnodeid, $compid, $start,
 		if($requestid)
 			$query .= " AND rq.id != $requestid";
 		$qh = doQuery($query);
-		$rc2 = mysql_num_rows($qh);
+		$rc2 = mysqli_num_rows($qh);
 		if($rc2) {
 			$query = "DELETE FROM semaphore "
 			       . "WHERE computerid = $compid AND "
@@ -5726,7 +5726,7 @@ function editRequestBlockCheck($compid, $imageid, $start, $end) {
 	       .       "r.imageid != $imageid) AND "
 	       .       "r.status = 'accepted'";
 	$qh = doQuery($query, 101);
-	return(mysql_num_rows($qh));
+	return(mysqli_num_rows($qh));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5799,7 +5799,7 @@ function getMaxOverlap($userid) {
 ///
 ////////////////////////////////////////////////////////////////////////////////
 function addRequest($forimaging=0, $revisionid=array(), $checkuser=1) {
-	global $requestInfo, $user, $uniqid, $mysql_link_vcl;
+	global $requestInfo, $user, $uniqid, $mysqli_link_vcl;
 	$startstamp = unixToDatetime($requestInfo["start"]);
 	$endstamp = unixToDatetime($requestInfo["end"]);
 	$now = time();
@@ -5892,7 +5892,7 @@ function addRequest($forimaging=0, $revisionid=array(), $checkuser=1) {
 	       . "WHERE expires > NOW() AND "
 	       .       "procid = '$uniqid'";
 	doQuery($query);
-	$cnt = mysql_affected_rows($mysql_link_vcl);
+	$cnt = mysqli_affected_rows($mysqli_link_vcl);
 	if($cnt == 0) {
 		# reached this point SEMTIMEOUT seconds after getting semaphore, clean up and abort
 		$query = "DELETE FROM request WHERE id = $requestid";
@@ -6565,7 +6565,7 @@ function getCompFinalReservationTime($compid, $extraskipstate=0) {
 ////////////////////////////////////////////////////////////////////////////////
 function getCompFinalVMReservationTime($hostid, $addsemaphores=0,
                                        $notomaintenance=0) {
-	global $uniqid, $mysql_link_vcl;
+	global $uniqid, $mysqli_link_vcl;
 	if($addsemaphores) {
 		$query = "SELECT vm.id "
 		       . "FROM computer vm, "
@@ -6597,7 +6597,7 @@ function getCompFinalVMReservationTime($hostid, $addsemaphores=0,
 		       .       "(s.expires IS NULL OR s.expires < NOW()) "
 		       . "GROUP BY c.id";
 		doQuery($query);
-		$cnt = mysql_affected_rows($mysql_link_vcl);
+		$cnt = mysqli_affected_rows($mysqli_link_vcl);
 		if($cnt != count($compids))
 			return -1;
 	}
@@ -8799,7 +8799,7 @@ function fATconcurrentOverlap($start, $length, $imageid, $maxoverlap,
 	if($extendonly)
 		$query .= " AND rq.id != $reqid";
 	$qh = doQuery($query);
-	if(mysql_num_rows($qh) >= $maxoverlap)
+	if(mysqli_num_rows($qh) >= $maxoverlap)
 		return 1;
 	return 0;
 }
@@ -10808,7 +10808,7 @@ function addChangeLogEntry($logid, $remoteIP, $end=NULL, $start=NULL,
 ///
 ////////////////////////////////////////////////////////////////////////////////
 function addChangeLogEntryOther($logid, $data) {
-	$data = mysql_real_escape_string($data);
+	$data = mysqli_real_escape_string($data);
 	$query = "INSERT INTO changelog "
 	       .        "(logid, "
 	       .        "timestamp, "
@@ -11105,8 +11105,8 @@ function getReservationLengthCeiling($length) {
 ////////////////////////////////////////////////////////////////////////////////
 function getResourceGroupID($groupname) {
 	list($type, $name) = explode('/', $groupname);
-	$type = mysql_real_escape_string($type);
-	$name = mysql_real_escape_string($name);
+	$type = mysqli_real_escape_string($type);
+	$name = mysqli_real_escape_string($name);
 	$query = "SELECT g.id "
 	       . "FROM resourcegroup g, "
 	       .      "resourcetype t "
@@ -11155,7 +11155,9 @@ function getResourceGroupName($groupid) {
 ///
 ////////////////////////////////////////////////////////////////////////////////
 function getResourceTypeID($name) {
-	$name = mysql_real_escape_string($name);
+	global $mysqli_link_vcl;
+
+	$name = mysqli_real_escape_string($mysqli_link_vcl, $name);
 	$query = "SELECT id "
 	       . "FROM resourcetype "
 	       . "WHERE name = '$name'";
@@ -12022,8 +12024,8 @@ function weekOfYear($ts) {
 ///
 ////////////////////////////////////////////////////////////////////////////////
 function cleanSemaphore() {
-	global $mysql_link_vcl, $uniqid;
-	if(! is_resource($mysql_link_vcl) || ! get_resource_type($mysql_link_vcl) == 'mysql link')
+	global $mysqli_link_vcl, $uniqid;
+	if(! is_resource($mysqli_link_vcl) || ! get_resource_type($mysqli_link_vcl) == 'mysql link')
 		return;
 	$query = "DELETE FROM semaphore "
 	       . "WHERE procid = '$uniqid'";
@@ -12200,7 +12202,7 @@ function addContinuationsEntry($nextmode, $data=array(), $duration=SECINWEEK,
 		$contid = md5($mode . $nextmode . $serdata . $user['id'] . $_SERVER['REMOTE_ADDR'] . $_SERVER['HTTP_USER_AGENT']);
 	else
 		$contid = md5($mode . $nextmode . $serdata . $user['id'] . $_SERVER['REMOTE_ADDR']);
-	$serdata = mysql_real_escape_string($serdata);
+	$serdata = mysqli_real_escape_string($serdata);
 	$expiretime = unixToDatetime(time() + $duration);
 	$query = "SELECT id, "
 	       .        "parentid "
@@ -12560,14 +12562,14 @@ function setVariable($key, $data, $serialization='') {
 	$_SESSION['variables'][$key] = $data;
 	switch($serialization) {
 		case 'none':
-			$qdata = mysql_real_escape_string($data);
+			$qdata = mysqli_real_escape_string($data);
 			break;
 		case 'yaml':
 			$yaml = Spyc::YAMLDump($data);
-			$qdata = mysql_real_escape_string($yaml);
+			$qdata = mysqli_real_escape_string($yaml);
 			break;
 		case 'phpserialize':
-			$qdata = mysql_real_escape_string(serialize($data));
+			$qdata = mysqli_real_escape_string(serialize($data));
 			break;
 	}
 	if($update)
@@ -12778,7 +12780,7 @@ function xmlRPChandler($function, $args, $blah) {
 		$keyid = $user['id'];
 	if(function_exists($function)) {
 		if(! defined('XMLRPCLOGGING') || XMLRPCLOGGING != 0) {
-			$saveargs = mysql_real_escape_string(serialize($args));
+			$saveargs = mysqli_real_escape_string(serialize($args));
 			$query = "INSERT INTO xmlrpcLog "
 			       .        "(xmlrpcKeyid, "
 			       .        "timestamp, "
@@ -12819,13 +12821,13 @@ function xmlRPChandler($function, $args, $blah) {
 ///
 ////////////////////////////////////////////////////////////////////////////////
 function xmlRPCabort($errcode, $query='') {
-	global $mysql_link_vcl, $mysql_link_acct, $ERRORS, $user, $mode;
+	global $mysqli_link_vcl, $mysqli_link_acct, $ERRORS, $user, $mode;
 	global $XMLRPCERRORS;
 	if(ONLINEDEBUG && checkUserHasPerm('View Debug Information')) {
 		$msg = '';
 		if($errcode >= 100 && $errcode < 400) {
-			$msg .= "ERROR (" . mysql_errno($mysql_link_vcl) . ") - ";
-			$msg .= mysqli_error($mysql_link_vcl) . " $query ";
+			$msg .= "ERROR (" . mysqli_errno($mysqli_link_vcl) . ") - ";
+			$msg .= mysqli_error($mysqli_link_vcl) . " $query ";
 		}
 		$msg .= $ERRORS["$errcode"];
 		$XMLRPCERRORS[100] = $msg;
@@ -12834,8 +12836,8 @@ function xmlRPCabort($errcode, $query='') {
 	else {
 		$message = "";
 		if($errcode >= 100 && $errcode < 400) {
-			$message .= mysqli_error($mysql_link_vcl) . "\n";
-			$message .= mysqli_error($mysql_link_acct) . "\n";
+			$message .= mysqli_error($mysqli_link_vcl) . "\n";
+			$message .= mysqli_error($mysqli_link_acct) . "\n";
 			$message .= $query . "\n";
 		}
 		$message .= "ERROR($errcode): " . $ERRORS["$errcode"] . "\n";
@@ -12985,7 +12987,7 @@ function validateAPIgroupInput($items, $exists) {
 			             'errormsg' => 'existing user group with submitted name and affiliation');
 		}
 		elseif($exists && $doesexist) {
-			$esc_name = mysql_real_escape_string($items['name']);
+			$esc_name = mysqli_real_escape_string($items['name']);
 			$items['id'] = getUserGroupID($esc_name, $affilid);
 		}
 	}
